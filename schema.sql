@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS expenses (
     currency TEXT NOT NULL DEFAULT 'USD',
     date TEXT NOT NULL,
     split_type TEXT NOT NULL DEFAULT 'equal',
+    is_payment INTEGER NOT NULL DEFAULT 0,
     created_by_member_id INTEGER REFERENCES members(id),
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );

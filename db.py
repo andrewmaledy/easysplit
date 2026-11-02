@@ -19,6 +19,9 @@ def init_db():
     cols = [r[1] for r in db.execute("PRAGMA table_info(expenses)")]
     if "split_type" not in cols:
         db.execute("ALTER TABLE expenses ADD COLUMN split_type TEXT NOT NULL DEFAULT 'equal'")
+    cols = [r[1] for r in db.execute("PRAGMA table_info(expenses)")]
+    if "is_payment" not in cols:
+        db.execute("ALTER TABLE expenses ADD COLUMN is_payment INTEGER NOT NULL DEFAULT 0")
     db.commit()
     db.close()
 

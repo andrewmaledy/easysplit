@@ -31,6 +31,12 @@
                         <div class="arrow">pays {{ t.to }}</div>
                     </div>
                     <div class="amt">{{ project.currency }} {{ t.amount|money }}</div>
+                    <form method="POST" action="{{ url_for('settle_up', project_id=project.id) }}" style="margin-left:8px;">
+                        <input type="hidden" name="from_name" value="{{ t.from }}">
+                        <input type="hidden" name="to_name" value="{{ t.to }}">
+                        <input type="hidden" name="amount" value="{{ t.amount }}">
+                        <button type="submit" class="btn-sm" style="background:var(--green);">Settle</button>
+                    </form>
                 </div>
                 {% endfor %}
             </div>
@@ -207,9 +213,12 @@
                 </thead>
                 <tbody>
                 {% for e in expenses %}
-                    <tr>
+                    <tr{% if e.is_payment %} class="payment-row"{% endif %}>
                         <td style="color:var(--text-dim);font-size:0.875rem;white-space:nowrap;">{{ e.date }}</td>
-                        <td style="font-weight:500;">{{ e.description }}</td>
+                        <td style="font-weight:500;">
+                            {{ e.description }}
+                            {% if e.is_payment %}<span class="pill green" style="margin-left:6px;font-size:0.7rem;padding:1px 8px;">Payment</span>{% endif %}
+                        </td>
                         <td style="color:var(--text-dim);">{{ e.created_by_name or '—' }}</td>
                         <td class="right" style="font-weight:600;">{{ project.currency }} {{ e.cost|money }}</td>
                         <td>

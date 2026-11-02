@@ -280,6 +280,39 @@ def run():
     assert abs(bal["Alice"] - expected_alice_net) < 0.02, f"Alice net should be {expected_alice_net}, got {bal['Alice']}"
     print(f"PASS: balances after edit — Alice net={bal['Alice']:.2f}")
 
+    # 15. Settle up: Bob pays Alice
+    # Get current simplified debts to find a settlement
+    resp = client.get("/projects/1/balances")
+    data = resp.get_json()
+    simplified = data["simplified_debts"]
+    assert len(simplified) > 0, "should have debts to settle"
+    settlement = simplified[0]
+    print(f"  Settling: {settlement['from']} pays {settlement['to']} {settlement['amount']}")
+
+    resp = client.post("/projects/1/settle", data={
+        "from_name": settlement["from"],
+        "to_name": settlement["to"],
+        "amount": str(settlement["amount"]),
+    }, follow_redirects=True)
+    assert b"Settled" in resp.data, "should show settlement flash"
+    print("PASS: settle up")
+
+    # Verify the settlement reduced the debt
+    resp = client.get("/projects/1/balances")
+    data = resp.get_json()
+    bal = {b["name"]: b["net"] for b in data["balances"]}
+    settled_from = settlement["from"]
+    settled_to = settlement["to"]
+    settled_amt = settlement["amount"]
+    # The debtor's net should have increased by amount, creditor's decreased
+    # Check that the specific debt is gone or reduced
+    new_simplified = data["simplified_debts"]
+    # At least one fewer settlement, or the amounts changed
+    assert len(new_simplified) < len(simplified) or \
+           sum(t["amount"] for t in new_simplified) < sum(t["amount"] for t in simplified), \
+           "total debt should have decreased"
+    print(f"PASS: debt reduced after settlement — {len(new_simplified)} remaining")
+
     print("\n✅ All tests passed!")
 
 run()

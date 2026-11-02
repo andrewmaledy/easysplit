@@ -300,6 +300,7 @@ def project(project_id):
             "currency": e["currency"],
             "date": e["date"],
             "created_by_name": e["created_by_name"],
+            "is_payment": bool(e["is_payment"]) if "is_payment" in e.keys() else False,
             "shares": shares,
             "pie": pie_data,
         })
@@ -568,6 +569,58 @@ def toggle_simplify(project_id):
     project = get_project_or_404(project_id)
     new_val = 0 if project["simplify_by_default"] else 1
     db.execute("UPDATE projects SET simplify_by_default = ? WHERE id = ?", (new_val, project_id))
+    return redirect(url_for("project", project_id=project_id))
+
+
+@app.route("/projects/<int:project_id>/settle", methods=["POST"])
+def settle_up(project_id):
+    if not require_project_access(project_id):
+        return redirect(url_for("home"))
+    project = get_project_or_404(project_id)
+    from_name = request.form.get("from_name", "").strip()
+    to_name = request.form.get("to_name", "").strip()
+    amount_str = request.form.get("amount", "0").strip()
+
+    try:
+        amount = float(amount_str)
+    except ValueError:
+        flash("Invalid amount.", "error")
+        return redirect(url_for("project", project_id=project_id))
+
+    if amount <= 0 or not from_name or not to_name:
+        flash("Invalid settlement.", "error")
+        return redirect(url_for("project", project_id=project_id))
+
+    from_member = db.query(
+        "SELECT id FROM members WHERE project_id = ? AND name = ?",
+        (project_id, from_name), one=True,
+    )
+    to_member = db.query(
+        "SELECT id FROM members WHERE project_id = ? AND name = ?",
+        (project_id, to_name), one=True,
+    )
+    if not from_member or not to_member:
+        flash("Member not found.", "error")
+        return redirect(url_for("project", project_id=project_id))
+
+    expense_id = db.execute(
+        """INSERT INTO expenses
+           (project_id, description, cost, currency, date, split_type, is_payment, created_by_member_id)
+           VALUES (?, ?, ?, ?, ?, 'payment', 1, ?)""",
+        (project_id, f"Settlement: {from_name} → {to_name}", amount, project["currency"],
+         date.today().isoformat(), from_member["id"]),
+        return_id=True,
+    )
+    db.execute(
+        "INSERT INTO shares (expense_id, member_id, paid_share, owed_share) VALUES (?, ?, ?, 0)",
+        (expense_id, from_member["id"], amount),
+    )
+    db.execute(
+        "INSERT INTO shares (expense_id, member_id, paid_share, owed_share) VALUES (?, ?, 0, ?)",
+        (expense_id, to_member["id"], amount),
+    )
+
+    flash(f"Settled: {from_name} paid {to_name} {project['currency']} {amount:.2f}", "success")
     return redirect(url_for("project", project_id=project_id))
 
 
