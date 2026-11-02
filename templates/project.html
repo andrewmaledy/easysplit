@@ -862,7 +862,12 @@ document.getElementById('math-modal').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeMath();
 });
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeMath();
+    if (e.key === 'Escape') {
+        closeMath();
+        closeAddMember();
+        closeEditExpense();
+        closeSettle();
+    }
 });
 </script>
 {% endblock %}
