@@ -151,7 +151,10 @@ app.jinja_env.filters["money"] = fmt_money
 @app.route("/")
 def home():
     if "project_id" in session:
-        return redirect(url_for("project", project_id=session["project_id"]))
+        pid = session["project_id"]
+        if db.query("SELECT 1 FROM projects WHERE id = ?", (pid,), one=True):
+            return redirect(url_for("project", project_id=pid))
+        session.pop("project_id", None)
     return render_template("home.html")
 
 
@@ -202,7 +205,11 @@ def logout_project(project_id):
 @app.route("/projects/<int:project_id>")
 def project(project_id):
     require_project_access(project_id)
-    project = get_project_or_404(project_id)
+    project = db.query("SELECT * FROM projects WHERE id = ?", (project_id,), one=True)
+    if not project:
+        session.pop("project_id", None)
+        flash("That project no longer exists.", "error")
+        return redirect(url_for("home"))
     members = get_members(project_id)
     expenses = get_expenses(project_id)
 
