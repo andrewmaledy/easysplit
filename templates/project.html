@@ -11,253 +11,252 @@
         </button>
     </form>
 </div>
-<p style="color:var(--text-dim);font-size:0.875rem;margin-bottom:28px;">Share the trip password with anyone you want to add expenses.</p>
+<p style="color:var(--text-dim);font-size:0.875rem;margin-bottom:24px;">Share the trip password with anyone you want to add expenses.</p>
 
-<!-- Simplified Debts -->
-<div class="section">
-    <div class="section-header">
-        <h2>Settle Up</h2>
-        <button class="btn-secondary btn-sm" id="show-math-btn">Show me the math</button>
-    </div>
-    {% if project.simplify_by_default %}
-        {% if simplified %}
-        <div class="card" style="padding:16px;">
-            {% for t in simplified %}
-            <div class="debt-card">
-                <div class="avatar">{{ t.from[0]|upper }}</div>
-                <div>
-                    <div class="who">{{ t.from }}</div>
-                    <div class="arrow">pays {{ t.to }}</div>
+<div class="dashboard-grid">
+    <!-- Settle Up -->
+    <div class="section tile-settle">
+        <div class="section-header">
+            <h2>Settle Up</h2>
+            <button class="btn-secondary btn-sm" id="show-math-btn">Show me the math</button>
+        </div>
+        {% if project.simplify_by_default %}
+            {% if simplified %}
+            <div class="card" style="padding:16px;">
+                {% for t in simplified %}
+                <div class="debt-card">
+                    <div class="avatar">{{ t.from[0]|upper }}</div>
+                    <div>
+                        <div class="who">{{ t.from }}</div>
+                        <div class="arrow">pays {{ t.to }}</div>
+                    </div>
+                    <div class="amt">{{ project.currency }} {{ t.amount|money }}</div>
                 </div>
-                <div class="amt">{{ project.currency }} {{ t.amount|money }}</div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="card empty-state">
+                <div class="icon">&#10003;</div>
+                <p style="font-weight:500;">Everyone's settled up!</p>
+            </div>
+            {% endif %}
+        {% else %}
+        <div class="card empty-state"><p>Simplify debts is off for this trip.</p></div>
+        {% endif %}
+    </div>
+
+    <!-- Balances -->
+    <div class="section tile-balances">
+        <div class="section-header"><h2>Balances</h2></div>
+        <div class="card">
+            {% for b in balances %}
+            <div class="balance-bar">
+                <div class="name">{{ b.name }}</div>
+                <div class="bar-track">
+                    {% if b.net > 0.01 %}
+                    <div class="bar-fill pos" style="width: {{ (b.net / max_abs * 50)|round(1) }}%;"></div>
+                    {% elif b.net < -0.01 %}
+                    <div class="bar-fill neg" style="width: {{ (b.net / max_abs * 50 * -1)|round(1) }}%;"></div>
+                    {% endif %}
+                </div>
+                <div class="amt
+                    {% if b.net > 0.01 %}pos
+                    {% elif b.net < -0.01 %}neg
+                    {% else %}neutral{% endif %}">
+                    {% if b.net > 0.01 %}+{% endif %}{{ project.currency }} {{ b.net|money }}
+                </div>
             </div>
             {% endfor %}
         </div>
-        {% else %}
-        <div class="card empty-state">
-            <div class="icon">&#10003;</div>
-            <p style="font-weight:500;">Everyone's settled up!</p>
-        </div>
-        {% endif %}
-    {% else %}
-    <div class="card empty-state"><p>Simplify debts is off for this trip.</p></div>
-    {% endif %}
-</div>
-
-<!-- Balances -->
-<div class="section">
-    <div class="section-header"><h2>Balances</h2></div>
-    <div class="card">
-        {% for b in balances %}
-        <div class="balance-bar">
-            <div class="name">{{ b.name }}</div>
-            <div class="bar-track">
-                {% if b.net > 0.01 %}
-                <div class="bar-fill pos" style="width: {{ (b.net / max_abs * 50)|round(1) }}%;"></div>
-                {% elif b.net < -0.01 %}
-                <div class="bar-fill neg" style="width: {{ (b.net / max_abs * 50 * -1)|round(1) }}%;"></div>
-                {% endif %}
-            </div>
-            <div class="amt
-                {% if b.net > 0.01 %}pos
-                {% elif b.net < -0.01 %}neg
-                {% else %}neutral{% endif %}">
-                {% if b.net > 0.01 %}+{% endif %}{{ project.currency }} {{ b.net|money }}
-            </div>
-        </div>
-        {% endfor %}
     </div>
-</div>
 
-<!-- Add Expense -->
-<div class="section">
-    <div class="section-header"><h2>Add Expense</h2></div>
-    <div class="card">
-        <form method="POST" action="{{ url_for('add_expense', project_id=project.id) }}" id="expense-form">
-            <div class="row">
-                <div class="field" style="flex:2;">
+    <!-- Add Expense -->
+    <div class="section tile-add-expense">
+        <div class="section-header"><h2>Add Expense</h2></div>
+        <div class="card">
+            <form method="POST" action="{{ url_for('add_expense', project_id=project.id) }}" id="expense-form">
+                <div class="field">
                     <label for="description">What was it for?</label>
                     <input type="text" id="description" name="description" required placeholder="Dinner, gas, groceries...">
                 </div>
-                <div class="field" style="max-width:130px;flex:0;">
-                    <label for="cost">Cost</label>
-                    <input type="number" id="cost" name="cost" step="0.01" min="0.01" required placeholder="0.00">
+                <div class="row">
+                    <div class="field" style="flex:1;">
+                        <label for="cost">Cost</label>
+                        <input type="number" id="cost" name="cost" step="0.01" min="0.01" required placeholder="0.00">
+                    </div>
+                    <div class="field" style="flex:1;">
+                        <label for="date">Date</label>
+                        <input type="date" id="date" name="date" value="{{ today }}">
+                    </div>
                 </div>
-                <div class="field" style="max-width:150px;flex:0;">
-                    <label for="date">Date</label>
-                    <input type="date" id="date" name="date" value="{{ today }}">
+                <div class="row">
+                    <div class="field" style="flex:1;">
+                        <label for="created_by_member_id">Entered by</label>
+                        <select id="created_by_member_id" name="created_by_member_id">
+                            {% for m in members %}
+                            <option value="{{ m.id }}">{{ m.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="field" style="flex:1;">
+                        <label for="payer_id">Paid by</label>
+                        <select id="payer_id" name="payer_id">
+                            {% for m in members %}
+                            <option value="{{ m.id }}">{{ m.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="field" style="flex:1;">
-                    <label for="created_by_member_id">Entered by</label>
-                    <select id="created_by_member_id" name="created_by_member_id">
+                <div class="field">
+                    <label>Split</label>
+                    <div class="tabs">
+                        <div class="tab active" id="tab-equal" onclick="showSplit('equal')">Split Equally</div>
+                        <div class="tab" id="tab-custom" onclick="showSplit('custom')">Custom</div>
+                    </div>
+                    <input type="hidden" name="split_type" id="split_type" value="equal">
+                </div>
+
+                <div id="equal-split">
+                    <label>Split among</label>
+                    <div class="check-row">
                         {% for m in members %}
-                        <option value="{{ m.id }}">{{ m.name }}</option>
+                        <label>
+                            <input type="checkbox" name="involved_members" value="{{ m.id }}" checked>
+                            {{ m.name }}
+                        </label>
                         {% endfor %}
-                    </select>
+                    </div>
                 </div>
-                <div class="field" style="flex:1;">
-                    <label for="payer_id">Paid by</label>
-                    <select id="payer_id" name="payer_id">
+
+                <div id="custom-split" style="display:none;">
+                    <div class="custom-progress">
+                        <div class="progress-row">
+                            <span class="progress-label">Owes allocated</span>
+                            <span class="progress-value" id="owed-allocated">$0.00</span>
+                        </div>
+                        <div class="progress-bar-track">
+                            <div class="progress-bar-fill" id="owed-bar" style="width:0%"></div>
+                        </div>
+                        <div class="progress-row">
+                            <span class="progress-remaining" id="owed-remaining">$0.00 left</span>
+                        </div>
+                        <div class="progress-row" style="margin-top:12px;">
+                            <span class="progress-label">Paid allocated</span>
+                            <span class="progress-value" id="paid-allocated">$0.00</span>
+                        </div>
+                        <div class="progress-bar-track">
+                            <div class="progress-bar-fill paid" id="paid-bar" style="width:0%"></div>
+                        </div>
+                        <div class="progress-row">
+                            <span class="progress-remaining" id="paid-remaining">$0.00 left</span>
+                        </div>
+                    </div>
+                    <div class="custom-members" id="custom-members">
                         {% for m in members %}
-                        <option value="{{ m.id }}">{{ m.name }}</option>
+                        <div class="custom-member" data-member-id="{{ m.id }}" data-name="{{ m.name }}">
+                            <div class="cm-header">
+                                <div class="cm-identity">
+                                    <span class="cm-avatar">{{ m.name[0]|upper }}</span>
+                                    <span class="cm-name">{{ m.name }}</span>
+                                </div>
+                                <div class="cm-header-right">
+                                    <span class="cm-pct" id="pct_{{ m.id }}">0%</span>
+                                    <button type="button" class="cm-exclude-btn" id="exclude_btn_{{ m.id }}" onclick="toggleCustomMember({{ m.id }})">Exclude</button>
+                                </div>
+                            </div>
+                            <div class="cm-inputs">
+                                <div class="cm-field">
+                                    <span class="cm-field-label">Paid</span>
+                                    <input type="text" inputmode="decimal" name="paid_{{ m.id }}" value="0"
+                                           oninput="updateCustomSummary()" data-paid="{{ m.id }}" placeholder="0">
+                                </div>
+                                <div class="cm-field">
+                                    <span class="cm-field-label">Owes</span>
+                                    <input type="text" inputmode="decimal" name="owed_{{ m.id }}" value="0"
+                                           oninput="updateCustomSummary()" data-owed="{{ m.id }}" placeholder="0">
+                                </div>
+                            </div>
+                            <input type="hidden" name="custom_excluded_{{ m.id }}" id="excluded_{{ m.id }}" value="0">
+                        </div>
                         {% endfor %}
-                    </select>
-                </div>
-            </div>
-            <div class="field">
-                <label>Split</label>
-                <div class="tabs">
-                    <div class="tab active" id="tab-equal" onclick="showSplit('equal')">Split Equally</div>
-                    <div class="tab" id="tab-custom" onclick="showSplit('custom')">Custom</div>
-                </div>
-                <input type="hidden" name="split_type" id="split_type" value="equal">
-            </div>
-
-            <div id="equal-split">
-                <label>Split among</label>
-                <div class="check-row">
-                    {% for m in members %}
-                    <label>
-                        <input type="checkbox" name="involved_members" value="{{ m.id }}" checked>
-                        {{ m.name }}
-                    </label>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <div id="custom-split" style="display:none;">
-                <!-- Allocation progress -->
-                <div class="custom-progress">
-                    <div class="progress-row">
-                        <span class="progress-label">Owes allocated</span>
-                        <span class="progress-value" id="owed-allocated">$0.00</span>
-                    </div>
-                    <div class="progress-bar-track">
-                        <div class="progress-bar-fill" id="owed-bar" style="width:0%"></div>
-                    </div>
-                    <div class="progress-row">
-                        <span class="progress-remaining" id="owed-remaining">$0.00 left</span>
-                    </div>
-                    <div class="progress-row" style="margin-top:12px;">
-                        <span class="progress-label">Paid allocated</span>
-                        <span class="progress-value" id="paid-allocated">$0.00</span>
-                    </div>
-                    <div class="progress-bar-track">
-                        <div class="progress-bar-fill paid" id="paid-bar" style="width:0%"></div>
-                    </div>
-                    <div class="progress-row">
-                        <span class="progress-remaining" id="paid-remaining">$0.00 left</span>
                     </div>
                 </div>
 
-                <!-- Member rows -->
-                <div class="custom-members" id="custom-members">
-                    {% for m in members %}
-                    <div class="custom-member" data-member-id="{{ m.id }}" data-name="{{ m.name }}">
-                        <div class="cm-header">
-                            <div class="cm-identity">
-                                <span class="cm-avatar">{{ m.name[0]|upper }}</span>
-                                <span class="cm-name">{{ m.name }}</span>
-                            </div>
-                            <div class="cm-header-right">
-                                <span class="cm-pct" id="pct_{{ m.id }}">0%</span>
-                                <button type="button" class="cm-exclude-btn" id="exclude_btn_{{ m.id }}" onclick="toggleCustomMember({{ m.id }})">Exclude</button>
-                            </div>
-                        </div>
-                        <div class="cm-inputs">
-                            <div class="cm-field">
-                                <span class="cm-field-label">Paid</span>
-                                <input type="text" inputmode="decimal" name="paid_{{ m.id }}" value="0"
-                                       oninput="updateCustomSummary()" data-paid="{{ m.id }}" placeholder="0">
-                            </div>
-                            <div class="cm-field">
-                                <span class="cm-field-label">Owes</span>
-                                <input type="text" inputmode="decimal" name="owed_{{ m.id }}" value="0"
-                                       oninput="updateCustomSummary()" data-owed="{{ m.id }}" placeholder="0">
-                            </div>
-                        </div>
-                        <input type="hidden" name="custom_excluded_{{ m.id }}" id="excluded_{{ m.id }}" value="0">
-                    </div>
-                    {% endfor %}
+                <div style="margin-top:20px;">
+                    <button type="submit" style="width:100%;">Add Expense</button>
                 </div>
-            </div>
-
-            <div style="margin-top:20px;">
-                <button type="submit" style="width:100%;">Add Expense</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Expenses -->
-<div class="section">
-    <div class="section-header"><h2>Expenses</h2></div>
-    {% if expenses %}
-    <div class="card" style="padding:0;overflow:hidden;">
-        <table>
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Description</th>
-                    <th>By</th>
-                    <th class="right">Cost</th>
-                    <th>Split</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for e in expenses %}
-                <tr>
-                    <td style="color:var(--text-dim);font-size:0.875rem;white-space:nowrap;">{{ e.date }}</td>
-                    <td style="font-weight:500;">{{ e.description }}</td>
-                    <td style="color:var(--text-dim);">{{ e.created_by_name or '—' }}</td>
-                    <td class="right" style="font-weight:600;">{{ project.currency }} {{ e.cost|money }}</td>
-                    <td>
-                        <div class="expense-split-tags">
-                        {% for s in e.shares %}
-                            {% if s.owed_share > 0 %}
-                            <span class="tag">{{ s.member_name }} {{ project.currency }}{{ s.owed_share|money }}</span>
-                            {% endif %}
-                        {% endfor %}
-                        </div>
-                    </td>
-                    <td>
-                        <form method="POST" action="{{ url_for('delete_expense', project_id=project.id, expense_id=e.id) }}"
-                              style="display:inline;"
-                              onsubmit="return confirm('Delete this expense?');">
-                            <button type="submit" class="btn-danger btn-sm">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% else %}
-    <div class="card empty-state">
-        <div class="icon">&#128178;</div>
-        <p>No expenses yet. Add one above!</p>
-    </div>
-    {% endif %}
-</div>
-
-<!-- Members -->
-<div class="section">
-    <div class="section-header"><h2>Members</h2></div>
-    <div class="card">
-        <div class="members-list">
-            {% for m in members %}
-            <span class="member-chip"><span class="av">{{ m.name[0]|upper }}</span>{{ m.name }}</span>
-            {% endfor %}
+            </form>
         </div>
-        <form method="POST" action="{{ url_for('add_member', project_id=project.id) }}" class="add-member-row">
-            <div class="field">
-                <input type="text" name="name" placeholder="Add a member...">
+    </div>
+
+    <!-- Expenses -->
+    <div class="section tile-expenses">
+        <div class="section-header"><h2>Expenses</h2></div>
+        {% if expenses %}
+        <div class="card" style="padding:0;overflow:hidden;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>By</th>
+                        <th class="right">Cost</th>
+                        <th>Split</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for e in expenses %}
+                    <tr>
+                        <td style="color:var(--text-dim);font-size:0.875rem;white-space:nowrap;">{{ e.date }}</td>
+                        <td style="font-weight:500;">{{ e.description }}</td>
+                        <td style="color:var(--text-dim);">{{ e.created_by_name or '—' }}</td>
+                        <td class="right" style="font-weight:600;">{{ project.currency }} {{ e.cost|money }}</td>
+                        <td>
+                            <div class="expense-split-tags">
+                            {% for s in e.shares %}
+                                {% if s.owed_share > 0 %}
+                                <span class="tag">{{ s.member_name }} {{ project.currency }}{{ s.owed_share|money }}</span>
+                                {% endif %}
+                            {% endfor %}
+                            </div>
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ url_for('delete_expense', project_id=project.id, expense_id=e.id) }}"
+                                  style="display:inline;"
+                                  onsubmit="return confirm('Delete this expense?');">
+                                <button type="submit" class="btn-danger btn-sm">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="card empty-state">
+            <div class="icon">&#128178;</div>
+            <p>No expenses yet. Add one!</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Members -->
+    <div class="section tile-members">
+        <div class="section-header"><h2>Members</h2></div>
+        <div class="card">
+            <div class="members-list">
+                {% for m in members %}
+                <span class="member-chip"><span class="av">{{ m.name[0]|upper }}</span>{{ m.name }}</span>
+                {% endfor %}
             </div>
-            <button type="submit" class="btn-secondary">Add</button>
-        </form>
+            <form method="POST" action="{{ url_for('add_member', project_id=project.id) }}" class="add-member-row">
+                <div class="field">
+                    <input type="text" name="name" placeholder="Add a member...">
+                </div>
+                <button type="submit" class="btn-secondary">Add</button>
+            </form>
+        </div>
     </div>
 </div>
 

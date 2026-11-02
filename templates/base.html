@@ -78,9 +78,37 @@
         .nav .btn-leave:hover { color: var(--text); border-color: var(--text-dim); }
 
         .container {
-            max-width: 860px;
+            max-width: 1100px;
             margin: 0 auto;
             padding: 32px 24px 64px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-areas:
+                "settle balances"
+                "add-expense expenses"
+                "members members";
+            gap: 0 24px;
+        }
+        .tile-settle { grid-area: settle; }
+        .tile-balances { grid-area: balances; }
+        .tile-add-expense { grid-area: add-expense; }
+        .tile-expenses { grid-area: expenses; }
+        .tile-members { grid-area: members; }
+
+        @media (max-width: 820px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    "settle"
+                    "balances"
+                    "add-expense"
+                    "expenses"
+                    "members";
+                gap: 0;
+            }
         }
 
         h1 { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 4px; }
