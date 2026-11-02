@@ -39,7 +39,7 @@
                     <div class="arrow">pays {{ t.to }}</div>
                 </div>
                 <div class="amt">{{ project.currency }} {{ t.amount|money }}</div>
-                <button type="button" class="btn-sm" style="background:var(--green);margin-left:8px;"
+                <button type="button" class="btn-sm" style="margin-left:8px;"
                         onclick="openSettle('{{ t.from }}', '{{ t.to }}', {{ t.amount }})">Settle</button>
             </div>
             {% endfor %}

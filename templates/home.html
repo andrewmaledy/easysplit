@@ -10,7 +10,7 @@
 <div class="split-cards">
     <div class="card">
         <h2>Enter a Trip</h2>
-        <p style="color:var(--text-dim);font-size:0.875rem;margin-bottom:20px;">Got a trip password? Enter it to jump in.</p>
+        <p style="color:var(--text-dim);font-size:0.8125rem;margin-bottom:16px;">Got a trip password? Enter it to jump in.</p>
         <form method="POST" action="{{ url_for('join_project') }}">
             <div class="field">
                 <label for="password">Trip Password</label>
@@ -22,7 +22,7 @@
 
     <div class="card">
         <h2>Create a Trip</h2>
-        <p style="color:var(--text-dim);font-size:0.875rem;margin-bottom:20px;">Start a new trip and invite people with the password.</p>
+        <p style="color:var(--text-dim);font-size:0.8125rem;margin-bottom:16px;">Start a new trip and invite people with the password.</p>
         <form method="POST" action="{{ url_for('create_project') }}">
             <div class="row">
                 <div class="field" style="flex:2;">
@@ -46,7 +46,7 @@
                 <button type="button" class="add-member-btn" onclick="addMemberField()">+ Add member</button>
             </div>
             <div class="field">
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--text);font-size:0.875rem;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--text);font-size:0.8125rem;font-weight:600;">
                     <input type="checkbox" name="simplify_by_default" checked style="width:16px;height:16px;accent-color:var(--accent);">
                     Simplify debts — minimize the number of payments to settle up
                 </label>
