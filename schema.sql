@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS members (
     project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     partner_id INTEGER REFERENCES members(id),
+    etransfer TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     UNIQUE(project_id, name)
 );

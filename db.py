@@ -28,6 +28,9 @@ def init_db():
     mcols = [r[1] for r in db.execute("PRAGMA table_info(members)")]
     if "partner_id" not in mcols:
         db.execute("ALTER TABLE members ADD COLUMN partner_id INTEGER REFERENCES members(id)")
+    mcols = [r[1] for r in db.execute("PRAGMA table_info(members)")]
+    if "etransfer" not in mcols:
+        db.execute("ALTER TABLE members ADD COLUMN etransfer TEXT")
     db.commit()
     db.close()
 

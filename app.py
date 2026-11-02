@@ -358,7 +358,11 @@ def project(project_id):
                 if combined > max_abs:
                     max_abs = combined
 
-    members_json = [{"id": m["id"], "name": m["name"], "partner_id": m["partner_id"] if "partner_id" in m.keys() else None} for m in members]
+    members_json = [{"id": m["id"], "name": m["name"], "partner_id": m["partner_id"] if "partner_id" in m.keys() else None, "etransfer": m["etransfer"] if "etransfer" in m.keys() else None} for m in members]
+
+    etransfer_map = {}
+    for m in members:
+        etransfer_map[m["name"]] = m["etransfer"] if "etransfer" in m.keys() else None
 
     payments = [e for e in expense_list if e["is_payment"]]
 
@@ -371,6 +375,7 @@ def project(project_id):
         payments=payments,
         balances=balances,
         simplified=simplified,
+        etransfer_map=etransfer_map,
         today=date.today().isoformat(),
         max_abs=max_abs,
     )
@@ -625,6 +630,68 @@ def rename_member(project_id, member_id):
         return redirect(url_for("project", project_id=project_id))
     db.execute("UPDATE members SET name = ? WHERE id = ? AND project_id = ?", (name, member_id, project_id))
     flash("Member renamed.", "success")
+    return redirect(url_for("project", project_id=project_id))
+
+
+@app.route("/projects/<int:project_id>/members/<int:member_id>/data")
+def member_data(project_id, member_id):
+    if not require_project_access(project_id):
+        return redirect(url_for("home"))
+    member = db.query("SELECT id, name, partner_id, etransfer FROM members WHERE id = ? AND project_id = ?", (member_id, project_id), one=True)
+    if not member:
+        return jsonify({"error": "not found"}), 404
+    members = get_members(project_id)
+    linkable = [{"id": m["id"], "name": m["name"]} for m in members
+                if m["id"] != member_id and not m["partner_id"]]
+    return jsonify({
+        "id": member["id"],
+        "name": member["name"],
+        "partner_id": member["partner_id"],
+        "etransfer": member["etransfer"] if "etransfer" in member.keys() else None,
+        "linkable": linkable,
+    })
+
+
+@app.route("/projects/<int:project_id>/members/<int:member_id>/edit", methods=["POST"])
+def edit_member(project_id, member_id):
+    if not require_project_access(project_id):
+        return redirect(url_for("home"))
+    name = request.form.get("name", "").strip()
+    etransfer = request.form.get("etransfer", "").strip()
+    partner_id = request.form.get("partner_id", type=int)
+    unlink = request.form.get("unlink") == "1"
+
+    if not name:
+        flash("Name is required.", "error")
+        return redirect(url_for("project", project_id=project_id))
+
+    member = db.query("SELECT partner_id FROM members WHERE id = ? AND project_id = ?", (member_id, project_id), one=True)
+    if not member:
+        flash("Member not found.", "error")
+        return redirect(url_for("project", project_id=project_id))
+
+    if unlink or (partner_id and partner_id == member_id):
+        if member["partner_id"]:
+            db.execute("UPDATE members SET partner_id = NULL WHERE id = ? AND project_id = ?", (member["partner_id"], project_id))
+        db.execute("UPDATE members SET name = ?, etransfer = ?, partner_id = NULL WHERE id = ? AND project_id = ?",
+                    (name, etransfer or None, member_id, project_id))
+    elif partner_id:
+        members = get_members(project_id)
+        member_ids = {m["id"] for m in members}
+        if partner_id not in member_ids:
+            flash("Invalid member to link.", "error")
+            return redirect(url_for("project", project_id=project_id))
+        if member["partner_id"]:
+            db.execute("UPDATE members SET partner_id = NULL WHERE id = ? AND project_id = ?", (member["partner_id"], project_id))
+        db.execute("UPDATE members SET name = ?, etransfer = ?, partner_id = ? WHERE id = ? AND project_id = ?",
+                    (name, etransfer or None, partner_id, member_id, project_id))
+        db.execute("UPDATE members SET partner_id = ? WHERE id = ? AND project_id = ?",
+                    (member_id, partner_id, project_id))
+    else:
+        db.execute("UPDATE members SET name = ?, etransfer = ? WHERE id = ? AND project_id = ?",
+                    (name, etransfer or None, member_id, project_id))
+
+    flash("Member updated.", "success")
     return redirect(url_for("project", project_id=project_id))
 
 

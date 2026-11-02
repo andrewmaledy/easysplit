@@ -37,6 +37,9 @@
                 <div>
                     <div class="who">{{ t.from }}</div>
                     <div class="arrow">pays {{ t.to }}</div>
+                    {% if etransfer_map.get(t.to) %}
+                    <div style="font-size:0.6875rem;color:var(--text-dim);margin-top:2px;">&#128231; {{ etransfer_map[t.to] }}</div>
+                    {% endif %}
                 </div>
                 <div class="amt">{{ project.currency }} {{ t.amount|money }}</div>
                 <button type="button" class="btn-sm" style="margin-left:8px;"
@@ -335,53 +338,58 @@
                         <span class="member-chip">
                             <span class="av">{{ m.name[0]|upper }}</span>
                             <span>{{ m.name }}</span>
-                            <form method="POST" action="{{ url_for('rename_member', project_id=project.id, member_id=m.id) }}" style="display:inline;">
-                                <input type="text" name="name" value="{{ m.name }}" style="display:none;width:120px;padding:2px 6px;font-size:0.8rem;border:1px solid var(--border);border-radius:6px;" onkeydown="if(event.key==='Enter')this.form.submit(); if(event.key==='Escape')this.style.display='none';" onblur="this.style.display='none';">
-                            </form>
-                            <button type="button" onclick="this.previousElementSibling.style.display='inline-block'; this.previousElementSibling.focus();" style="background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:0.75rem;padding:0 2px;" title="Rename">&#9998;</button>
-                            <form method="POST" action="{{ url_for('delete_member', project_id=project.id, member_id=m.id) }}" style="display:inline;" onsubmit="return confirm('Remove {{ m.name }} from this trip?');">
-                                <button type="submit" style="background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:0.75rem;padding:0 2px;" title="Remove">&#10005;</button>
-                            </form>
+                            <button type="button" onclick="openEditMember({{ m.id }})" style="background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:0.6875rem;padding:0 2px;font-weight:600;" title="Edit">Edit</button>
                         </span>
-                        <span style="color:var(--text-dim);font-size:0.7rem;padding:0 2px;">grouped</span>
+                        <span class="label">grouped</span>
                         <span class="member-chip">
                             <span class="av">{{ partner.name[0]|upper }}</span>
                             <span>{{ partner.name }}</span>
-                            <form method="POST" action="{{ url_for('rename_member', project_id=project.id, member_id=partner.id) }}" style="display:inline;">
-                                <input type="text" name="name" value="{{ partner.name }}" style="display:none;width:120px;padding:2px 6px;font-size:0.8rem;border:1px solid var(--border);border-radius:6px;" onkeydown="if(event.key==='Enter')this.form.submit(); if(event.key==='Escape')this.style.display='none';" onblur="this.style.display='none';">
-                            </form>
-                            <button type="button" onclick="this.previousElementSibling.style.display='inline-block'; this.previousElementSibling.focus();" style="background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:0.75rem;padding:0 2px;" title="Rename">&#9998;</button>
-                            <form method="POST" action="{{ url_for('delete_member', project_id=project.id, member_id=partner.id) }}" style="display:inline;" onsubmit="return confirm('Remove {{ partner.name }} from this trip?');">
-                                <button type="submit" style="background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:0.75rem;padding:0 2px;" title="Remove">&#10005;</button>
-                            </form>
+                            <button type="button" onclick="openEditMember({{ partner.id }})" style="background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:0.6875rem;padding:0 2px;font-weight:600;" title="Edit">Edit</button>
                         </span>
-                        <form method="POST" action="{{ url_for('unlink_partner', project_id=project.id, member_id=m.id) }}" style="display:inline;">
-                            <button type="submit" style="background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:0.7rem;padding:0 2px;text-decoration:underline;" title="Unlink">unlink</button>
-                        </form>
                     </span>
                 {% else %}
                     <span class="member-chip">
                         <span class="av">{{ m.name[0]|upper }}</span>
                         <span>{{ m.name }}</span>
-                        <form method="POST" action="{{ url_for('link_partner', project_id=project.id, member_id=m.id) }}" style="display:inline;">
-                            <select name="partner_id" onchange="if(this.value)this.form.submit();" style="font-size:0.75rem;padding:1px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface);">
-                                <option value="">Link...</option>
-                                {% for om in members if om.id != m.id and not om.partner_id %}
-                                <option value="{{ om.id }}">{{ om.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </form>
-                        <form method="POST" action="{{ url_for('rename_member', project_id=project.id, member_id=m.id) }}" style="display:inline;">
-                            <input type="text" name="name" value="{{ m.name }}" style="display:none;width:120px;padding:2px 6px;font-size:0.8rem;border:1px solid var(--border);border-radius:6px;" onkeydown="if(event.key==='Enter')this.form.submit(); if(event.key==='Escape')this.style.display='none';" onblur="this.style.display='none';">
-                        </form>
-                        <button type="button" onclick="this.previousElementSibling.style.display='inline-block'; this.previousElementSibling.focus();" style="background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:0.75rem;padding:0 2px;" title="Rename">&#9998;</button>
-                        <form method="POST" action="{{ url_for('delete_member', project_id=project.id, member_id=m.id) }}" style="display:inline;" onsubmit="return confirm('Remove {{ m.name }} from this trip?');">
-                            <button type="submit" style="background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:0.75rem;padding:0 2px;" title="Remove">&#10005;</button>
-                        </form>
+                        <button type="button" onclick="openEditMember({{ m.id }})" style="background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:0.6875rem;padding:0 2px;font-weight:600;" title="Edit">Edit</button>
                     </span>
                 {% endif %}
                 {% endfor %}
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Member Modal -->
+<div id="editmember-modal" class="modal-overlay" style="display:none;">
+    <div class="modal" style="max-width:440px;">
+        <div class="modal-header">
+            <h2>Edit Member</h2>
+            <button class="modal-close" onclick="closeEditMember()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form method="POST" action="" id="edit-member-form">
+                <div class="field">
+                    <label for="em_name">Name</label>
+                    <input type="text" id="em_name" name="name" required>
+                </div>
+                <div class="field">
+                    <label for="em_etransfer">E-transfer email/phone <span style="color:var(--text-dim);font-weight:400;">(optional)</span></label>
+                    <input type="text" id="em_etransfer" name="etransfer" placeholder="alice@example.com or +1 555-0123">
+                </div>
+                <div class="field">
+                    <label for="em_partner">Grouped with</label>
+                    <select id="em_partner" name="partner_id">
+                        <option value="">None</option>
+                    </select>
+                </div>
+                <input type="hidden" name="unlink" id="em_unlink" value="0">
+                <button type="submit" class="btn" style="width:100%;">Save Changes</button>
+            </form>
+            <hr style="margin:16px 0;border:none;border-top:1px solid var(--border);">
+            <form method="POST" action="" id="delete-member-form" onsubmit="return confirm('Remove this member from the trip? They must have no expenses.');">
+                <button type="submit" class="btn-danger" style="width:100%;">Remove Member</button>
+            </form>
         </div>
     </div>
 </div>
@@ -821,6 +829,37 @@ function closeTripSettings() {
 document.getElementById('tripsettings-modal').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeTripSettings();
 });
+
+let editingMemberId = null;
+async function openEditMember(memberId) {
+    editingMemberId = memberId;
+    const resp = await fetch(`/projects/${projectId}/members/${memberId}/data`);
+    const data = await resp.json();
+    document.getElementById('em_name').value = data.name;
+    document.getElementById('em_etransfer').value = data.etransfer || '';
+    const sel = document.getElementById('em_partner');
+    sel.innerHTML = '<option value="">None</option>';
+    if (data.partner_id) {
+        sel.innerHTML += `<option value="${data.partner_id}" selected>Unlink</option>`;
+        document.getElementById('em_unlink').value = '1';
+    } else {
+        document.getElementById('em_unlink').value = '0';
+        data.linkable.forEach(m => {
+            sel.innerHTML += `<option value="${m.id}">${m.name}</option>`;
+        });
+    }
+    document.getElementById('edit-member-form').action = `/projects/${projectId}/members/${memberId}/edit`;
+    document.getElementById('delete-member-form').action = `/projects/${projectId}/members/${memberId}/delete`;
+    document.getElementById('editmember-modal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+function closeEditMember() {
+    document.getElementById('editmember-modal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+document.getElementById('editmember-modal').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeEditMember();
+});
 function selectRecalc(which) {
     document.getElementById('rc-future').classList.toggle('selected', which === 'future');
     document.getElementById('rc-past').classList.toggle('selected', which === 'past');
@@ -1055,6 +1094,7 @@ document.addEventListener('keydown', (e) => {
         closeEditExpense();
         closeSettle();
         closeTripSettings();
+        closeEditMember();
     }
 });
 </script>
