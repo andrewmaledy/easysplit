@@ -214,25 +214,9 @@
                         <td class="right" style="font-weight:600;">{{ project.currency }} {{ e.cost|money }}</td>
                         <td>
                             <div class="pie-cell">
-                                <div class="pie-icon" style="background: conic-gradient({% for seg in e.pie %}{% if not loop.first %}, {% endif %}#{{ seg.color }} {{ seg.start }}% {{ seg.end }}%{% endfor %});"></div>
-                                <div class="pie-tooltip">
-                                    <div class="pie-tooltip-title">Split breakdown</div>
-                                    {% for seg in e.pie %}
-                                    <div class="pie-tooltip-row">
-                                        <span class="pie-dot" style="background:#{{ seg.color }}"></span>
-                                        <span>{{ seg.name }}</span>
-                                        <span style="margin-left:auto;font-weight:600;">{{ project.currency }} {{ seg.owed|money }}</span>
-                                        <span style="color:var(--text-dim);min-width:42px;text-align:right;">{{ seg.pct }}%</span>
-                                    </div>
-                                    {% endfor %}
-                                    {% for s in e.shares if s.paid_share > 0 and s.owed_share == 0 %}
-                                    <div class="pie-tooltip-row" style="opacity:0.6;">
-                                        <span class="pie-dot" style="background:var(--text-dim);"></span>
-                                        <span>{{ s.member_name }}</span>
-                                        <span style="margin-left:auto;font-weight:600;">paid {{ project.currency }} {{ s.paid_share|money }}</span>
-                                    </div>
-                                    {% endfor %}
-                                </div>
+                                <div class="pie-icon" style="background: conic-gradient({% for seg in e.pie %}{% if not loop.first %}, {% endif %}#{{ seg.color }} {{ seg.start }}% {{ seg.end }}%{% endfor %});"
+                                     data-pie='{{ e.pie | tojson }}'
+                                     data-currency="{{ project.currency }}"></div>
                             </div>
                         </td>
                         <td>
@@ -357,6 +341,35 @@ function selectRecalc(which) {
 }
 document.getElementById('addmember-modal').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeAddMember();
+});
+
+// Floating pie tooltip
+let pieFloat = null;
+document.querySelectorAll('.pie-icon').forEach(icon => {
+    icon.addEventListener('mouseenter', (e) => {
+        const data = JSON.parse(icon.dataset.pie);
+        const cur = icon.dataset.currency;
+        let html = '<div class="pie-float-title">Split breakdown</div>';
+        data.forEach(seg => {
+            html += `<div class="pie-float-row"><span class="pie-dot" style="background:#${seg.color}"></span><span>${seg.name}</span><span style="margin-left:auto;font-weight:600;">${cur} ${seg.owed.toFixed(2)}</span><span style="color:var(--text-dim);min-width:42px;text-align:right;">${seg.pct}%</span></div>`;
+        });
+        pieFloat = document.createElement('div');
+        pieFloat.className = 'pie-float';
+        pieFloat.innerHTML = html;
+        document.body.appendChild(pieFloat);
+        const rect = icon.getBoundingClientRect();
+        const floatRect = pieFloat.getBoundingClientRect();
+        let top = rect.top - floatRect.height - 10;
+        if (top < 8) top = rect.bottom + 10;
+        let left = rect.left + rect.width / 2 - floatRect.width / 2;
+        if (left < 8) left = 8;
+        if (left + floatRect.width > window.innerWidth - 8) left = window.innerWidth - floatRect.width - 8;
+        pieFloat.style.top = top + 'px';
+        pieFloat.style.left = left + 'px';
+    });
+    icon.addEventListener('mouseleave', () => {
+        if (pieFloat) { pieFloat.remove(); pieFloat = null; }
+    });
 });
 
 function showSplit(type) {
