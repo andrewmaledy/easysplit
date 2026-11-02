@@ -112,7 +112,10 @@ def compute_balances(project_id):
 
 
 def compute_raw_debts(project_id):
-    expenses = db.query("SELECT id, description FROM expenses WHERE project_id = ? ORDER BY date DESC, created_at DESC", (project_id,))
+    expenses = db.query(
+        "SELECT id, description FROM expenses WHERE project_id = ? AND is_payment = 0 ORDER BY date DESC, created_at DESC",
+        (project_id,),
+    )
     aggregated = {}
     breakdown = []
 
