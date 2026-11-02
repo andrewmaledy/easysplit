@@ -184,7 +184,7 @@ export function projectPage(
 
     <script>
     const projectId = ${project.id};
-    const membersData = ${JSON.stringify(membersJson)};
+    const membersData = ${raw(JSON.stringify(membersJson))};
     ${raw(PROJECT_JS)}
     </script>
   `)
@@ -401,7 +401,7 @@ function expensesTile(project: Project, expenses: any[]) {
                   <td class="hide-mobile">
                     <div class="pie-cell">
                       <div class="pie-icon" style="background: conic-gradient(${e.pie.map((seg: any, i: number) => `${i ? ', ' : ''}#${seg.color} ${seg.start}% ${seg.end}%`).join('')});"
-                           data-pie='${JSON.stringify(e.pie)}' data-currency="${project.currency}"></div>
+                           data-pie='${raw(JSON.stringify(e.pie))}' data-currency="${project.currency}"></div>
                     </div>
                   </td>
                   <td>
