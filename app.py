@@ -345,7 +345,7 @@ def project(project_id):
         })
 
     balances = compute_balances(project_id)
-    simplified = simplify_debts(balances) if project["simplify_by_default"] else []
+    simplified = simplify_debts(balances)
     max_bal = max((b["net"] for b in balances), default=0)
     min_bal = min((b["net"] for b in balances), default=0)
     max_abs = max(abs(max_bal), abs(min_bal), 0.01)
@@ -778,7 +778,7 @@ def balances_json(project_id):
         return redirect(url_for("home"))
     project = get_project_or_404(project_id)
     balances = compute_balances(project_id)
-    simplified = simplify_debts(balances) if project["simplify_by_default"] else []
+    simplified = simplify_debts(balances)
     return jsonify({
         "balances": balances,
         "simplified_debts": simplified,

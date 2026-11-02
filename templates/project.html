@@ -29,30 +29,26 @@
             <h2>Settle Up</h2>
             <button class="btn-secondary btn-sm hide-mobile" id="show-math-btn">Show me the math</button>
         </div>
-        {% if project.simplify_by_default %}
-            {% if simplified %}
-            <div class="card" style="padding:16px;">
-                {% for t in simplified %}
-                <div class="debt-card">
-                    <div class="avatar">{{ t.from[0]|upper }}</div>
-                    <div>
-                        <div class="who">{{ t.from }}</div>
-                        <div class="arrow">pays {{ t.to }}</div>
-                    </div>
-                    <div class="amt">{{ project.currency }} {{ t.amount|money }}</div>
-                    <button type="button" class="btn-sm" style="background:var(--green);margin-left:8px;"
-                            onclick="openSettle('{{ t.from }}', '{{ t.to }}', {{ t.amount }})">Settle</button>
+        {% if simplified %}
+        <div class="card" style="padding:16px;">
+            {% for t in simplified %}
+            <div class="debt-card">
+                <div class="avatar">{{ t.from[0]|upper }}</div>
+                <div>
+                    <div class="who">{{ t.from }}</div>
+                    <div class="arrow">pays {{ t.to }}</div>
                 </div>
-                {% endfor %}
+                <div class="amt">{{ project.currency }} {{ t.amount|money }}</div>
+                <button type="button" class="btn-sm" style="background:var(--green);margin-left:8px;"
+                        onclick="openSettle('{{ t.from }}', '{{ t.to }}', {{ t.amount }})">Settle</button>
             </div>
-            {% else %}
-            <div class="card empty-state">
-                <div class="icon">&#10003;</div>
-                <p style="font-weight:500;">Everyone's settled up!</p>
-            </div>
-            {% endif %}
+            {% endfor %}
+        </div>
         {% else %}
-        <div class="card empty-state"><p>Simplify debts is off for this trip.</p></div>
+        <div class="card empty-state">
+            <div class="icon">&#10003;</div>
+            <p style="font-weight:500;">Everyone's settled up!</p>
+        </div>
         {% endif %}
 
         {% if payments %}
