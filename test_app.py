@@ -140,9 +140,11 @@ def run():
     assert t["from"] == "X" and t["to"] == "Z" and abs(t["amount"] - 20) < 0.01, f"got {t}"
     print(f"PASS: 3-way chain simplified to 1 transaction — {t}")
 
-    # 8. Delete an expense
+    # 8. Delete an expense (restore session to project 1 first)
+    with client.session_transaction() as sess:
+        sess["project_id"] = 1
     resp = client.post("/projects/1/expenses/1/delete", follow_redirects=True)
-    assert b"Dinner" not in resp.data, "deleted expense should be gone"
+    assert b">Dinner<" not in resp.data, "deleted expense should not appear in table"
     print("PASS: expense deleted")
 
     # 9. Test join-by-password: clear session, rejoin with password
@@ -158,6 +160,14 @@ def run():
     resp = client.post("/projects/join", data={"password": "wrong"}, follow_redirects=True)
     assert b"No trip found" in resp.data, "should show error for wrong password"
     print("PASS: wrong password rejected")
+
+    # 11. Unauthenticated access to project URL redirects home (no 403)
+    with client.session_transaction() as sess:
+        sess.pop("project_id", None)
+    resp = client.get("/projects/1", follow_redirects=True)
+    assert resp.status_code == 200
+    assert b"Enter Trip Password" in resp.data, "should redirect to home page, not 403"
+    print("PASS: unauthenticated project URL redirects home (no 403)")
 
     print("\n✅ All tests passed!")
 

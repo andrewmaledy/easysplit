@@ -18,7 +18,9 @@ def round_cents(value):
 
 def require_project_access(project_id):
     if session.get("project_id") != project_id:
-        abort(403)
+        flash("Please enter the trip password to access that page.", "error")
+        return False
+    return True
 
 
 def get_project_or_404(project_id):
@@ -213,7 +215,8 @@ def logout_project(project_id):
 
 @app.route("/projects/<int:project_id>")
 def project(project_id):
-    require_project_access(project_id)
+    if not require_project_access(project_id):
+        return redirect(url_for("home"))
     project = db.query("SELECT * FROM projects WHERE id = ?", (project_id,), one=True)
     if not project:
         session.pop("project_id", None)
@@ -251,7 +254,8 @@ def project(project_id):
 
 @app.route("/projects/<int:project_id>/expenses", methods=["POST"])
 def add_expense(project_id):
-    require_project_access(project_id)
+    if not require_project_access(project_id):
+        return redirect(url_for("home"))
     project = get_project_or_404(project_id)
 
     description = request.form.get("description", "").strip()
@@ -345,7 +349,8 @@ def add_expense(project_id):
 
 @app.route("/projects/<int:project_id>/expenses/<int:expense_id>/delete", methods=["POST"])
 def delete_expense(project_id, expense_id):
-    require_project_access(project_id)
+    if not require_project_access(project_id):
+        return redirect(url_for("home"))
     db.execute("DELETE FROM shares WHERE expense_id = ?", (expense_id,))
     db.execute("DELETE FROM expenses WHERE id = ? AND project_id = ?", (expense_id, project_id))
     flash("Expense deleted.", "success")
@@ -354,7 +359,8 @@ def delete_expense(project_id, expense_id):
 
 @app.route("/projects/<int:project_id>/members", methods=["POST"])
 def add_member(project_id):
-    require_project_access(project_id)
+    if not require_project_access(project_id):
+        return redirect(url_for("home"))
     name = request.form.get("name", "").strip()
     if not name:
         flash("Member name is required.", "error")
@@ -369,7 +375,8 @@ def add_member(project_id):
 
 @app.route("/projects/<int:project_id>/balances")
 def balances_json(project_id):
-    require_project_access(project_id)
+    if not require_project_access(project_id):
+        return redirect(url_for("home"))
     project = get_project_or_404(project_id)
     balances = compute_balances(project_id)
     simplified = simplify_debts(balances) if project["simplify_by_default"] else []
