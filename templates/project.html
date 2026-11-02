@@ -157,22 +157,25 @@
                     {% for m in members %}
                     <div class="custom-member" data-member-id="{{ m.id }}" data-name="{{ m.name }}">
                         <div class="cm-header">
-                            <button type="button" class="cm-toggle" onclick="toggleCustomMember({{ m.id }})" title="Include/exclude">
+                            <div class="cm-identity">
                                 <span class="cm-avatar">{{ m.name[0]|upper }}</span>
                                 <span class="cm-name">{{ m.name }}</span>
-                            </button>
-                            <span class="cm-pct" id="pct_{{ m.id }}">0%</span>
+                            </div>
+                            <div class="cm-header-right">
+                                <span class="cm-pct" id="pct_{{ m.id }}">0%</span>
+                                <button type="button" class="cm-exclude-btn" id="exclude_btn_{{ m.id }}" onclick="toggleCustomMember({{ m.id }})">Exclude</button>
+                            </div>
                         </div>
                         <div class="cm-inputs">
                             <div class="cm-field">
                                 <span class="cm-field-label">Paid</span>
-                                <input type="number" name="paid_{{ m.id }}" step="0.01" value="0" min="0"
-                                       oninput="updateCustomSummary()" data-paid="{{ m.id }}">
+                                <input type="text" inputmode="decimal" name="paid_{{ m.id }}" value="0"
+                                       oninput="updateCustomSummary()" data-paid="{{ m.id }}" placeholder="0">
                             </div>
                             <div class="cm-field">
                                 <span class="cm-field-label">Owes</span>
-                                <input type="number" name="owed_{{ m.id }}" step="0.01" value="0" min="0"
-                                       oninput="updateCustomSummary()" data-owed="{{ m.id }}">
+                                <input type="text" inputmode="decimal" name="owed_{{ m.id }}" value="0"
+                                       oninput="updateCustomSummary()" data-owed="{{ m.id }}" placeholder="0">
                             </div>
                         </div>
                         <input type="hidden" name="custom_excluded_{{ m.id }}" id="excluded_{{ m.id }}" value="0">
@@ -306,8 +309,10 @@ document.getElementById('cost').addEventListener('input', () => {
 function toggleCustomMember(memberId) {
     const row = document.querySelector(`.custom-member[data-member-id="${memberId}"]`);
     const hidden = document.getElementById(`excluded_${memberId}`);
+    const btn = document.getElementById(`exclude_btn_${memberId}`);
     const isExcluded = row.classList.toggle('excluded');
     hidden.value = isExcluded ? '1' : '0';
+    btn.textContent = isExcluded ? 'Include' : 'Exclude';
     if (isExcluded) {
         row.querySelector(`[data-paid="${memberId}"]`).value = '';
         row.querySelector(`[data-owed="${memberId}"]`).value = '';

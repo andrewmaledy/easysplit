@@ -409,9 +409,17 @@
         .custom-member.excluded { opacity: 0.35; }
         .custom-member.excluded .cm-inputs input { disabled: true; }
         .cm-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-        .cm-toggle {
-            background: none; border: none; cursor: pointer; padding: 0;
-            display: flex; align-items: center; gap: 8px; font-family: inherit;
+        .cm-identity { display: flex; align-items: center; gap: 8px; }
+        .cm-header-right { display: flex; align-items: center; gap: 8px; }
+        .cm-exclude-btn {
+            background: var(--bg); color: var(--text-dim);
+            border: 1px solid var(--border); border-radius: 6px;
+            padding: 3px 12px; font-size: 0.75rem; font-weight: 600;
+            cursor: pointer; transition: all 0.15s; font-family: inherit;
+        }
+        .cm-exclude-btn:hover { border-color: var(--text-dim); color: var(--text); }
+        .custom-member.excluded .cm-exclude-btn {
+            background: var(--accent-soft); color: var(--accent); border-color: rgba(99,102,241,0.3);
         }
         .cm-avatar {
             width: 28px; height: 28px; border-radius: 50%;
