@@ -87,9 +87,9 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             grid-template-areas:
-                "settle balances"
-                "add-expense expenses"
-                "members members";
+                "add-expense balances"
+                "expenses     settle"
+                "members      members";
             gap: 0 24px;
         }
         .tile-settle { grid-area: settle; }
@@ -102,10 +102,10 @@
             .dashboard-grid {
                 grid-template-columns: 1fr;
                 grid-template-areas:
-                    "settle"
-                    "balances"
                     "add-expense"
                     "expenses"
+                    "balances"
+                    "settle"
                     "members";
                 gap: 0;
             }
