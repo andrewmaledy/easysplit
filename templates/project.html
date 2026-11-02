@@ -67,7 +67,37 @@
     <div class="section tile-balances">
         <div class="section-header"><h2>Balances</h2></div>
         <div class="card">
+            {% set shown = [] %}
             {% for b in balances %}
+            {% set pid = b.partner_id if 'partner_id' in b.keys() else none %}
+            {% if b.member_id in shown %}
+            {% elif pid %}
+                {% set partner = balances | selectattr('member_id', 'equalto', pid) | first %}
+                {% if partner %}{{ shown.append(pid) }}{% endif %}
+                {% set combined_net = (b.net + partner.net) if partner else b.net %}
+                {% set combined_name = b.name ~ ' & ' ~ partner.name if partner else b.name %}
+            <div class="balance-bar">
+                <div class="name">
+                    <span>{{ combined_name }}</span>
+                    {% if partner and b.net != partner.net %}
+                    <span style="font-size:0.75rem;color:var(--text-dim);margin-left:4px;">({{ b.name }} {{ '%+.2f'|format(b.net) }}, {{ partner.name }} {{ '%+.2f'|format(partner.net) }})</span>
+                    {% endif %}
+                </div>
+                <div class="bar-track">
+                    {% if combined_net > 0.01 %}
+                    <div class="bar-fill pos" style="width: {{ (combined_net / max_abs * 50)|round(1) }}%;"></div>
+                    {% elif combined_net < -0.01 %}
+                    <div class="bar-fill neg" style="width: {{ (combined_net / max_abs * 50 * -1)|round(1) }}%;"></div>
+                    {% endif %}
+                </div>
+                <div class="amt
+                    {% if combined_net > 0.01 %}pos
+                    {% elif combined_net < -0.01 %}neg
+                    {% else %}neutral{% endif %}">
+                    {% if combined_net > 0.01 %}+{% endif %}{{ project.currency }} {{ combined_net|money }}
+                </div>
+            </div>
+            {% else %}
             <div class="balance-bar">
                 <div class="name">{{ b.name }}</div>
                 <div class="bar-track">
@@ -84,6 +114,7 @@
                     {% if b.net > 0.01 %}+{% endif %}{{ project.currency }} {{ b.net|money }}
                 </div>
             </div>
+            {% endif %}
             {% endfor %}
         </div>
     </div>
@@ -143,7 +174,9 @@
                     <div class="check-row">
                         {% for m in members %}
                         <label>
-                            <input type="checkbox" name="involved_members" value="{{ m.id }}" checked>
+                            <input type="checkbox" name="involved_members" value="{{ m.id }}" checked
+                                   data-partner="{{ m.partner_id if 'partner_id' in m.keys() else '' }}"
+                                   onchange="syncPartner(this)">
                             {{ m.name }}
                         </label>
                         {% endfor %}
@@ -276,18 +309,62 @@
         </div>
         <div class="card">
             <div class="members-list">
+                {% set shown = [] %}
                 {% for m in members %}
-                <span class="member-chip">
-                    <span class="av">{{ m.name[0]|upper }}</span>
-                    <span>{{ m.name }}</span>
-                    <form method="POST" action="{{ url_for('rename_member', project_id=project.id, member_id=m.id) }}" style="display:inline;">
-                        <input type="text" name="name" value="{{ m.name }}" style="display:none;width:120px;padding:2px 6px;font-size:0.8rem;border:1px solid var(--border);border-radius:6px;" onkeydown="if(event.key==='Enter')this.form.submit(); if(event.key==='Escape')this.style.display='none';" onblur="this.style.display='none';">
-                    </form>
-                    <button type="button" onclick="this.previousElementSibling.style.display='inline-block'; this.previousElementSibling.focus();" style="background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:0.75rem;padding:0 2px;" title="Rename">&#9998;</button>
-                    <form method="POST" action="{{ url_for('delete_member', project_id=project.id, member_id=m.id) }}" style="display:inline;" onsubmit="return confirm('Remove {{ m.name }} from this trip?');">
-                        <button type="submit" style="background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:0.75rem;padding:0 2px;" title="Remove">&times;</button>
-                    </form>
-                </span>
+                {% set pid = m.partner_id if 'partner_id' in m.keys() else none %}
+                {% if m.id in shown %}
+                {% elif pid %}
+                    {% set partner = members | selectattr('id', 'equalto', pid) | first %}
+                    {% if partner %}{{ shown.append(pid) }}{% endif %}
+                    <span class="member-group">
+                        <span class="member-chip">
+                            <span class="av">{{ m.name[0]|upper }}</span>
+                            <span>{{ m.name }}</span>
+                            <form method="POST" action="{{ url_for('rename_member', project_id=project.id, member_id=m.id) }}" style="display:inline;">
+                                <input type="text" name="name" value="{{ m.name }}" style="display:none;width:120px;padding:2px 6px;font-size:0.8rem;border:1px solid var(--border);border-radius:6px;" onkeydown="if(event.key==='Enter')this.form.submit(); if(event.key==='Escape')this.style.display='none';" onblur="this.style.display='none';">
+                            </form>
+                            <button type="button" onclick="this.previousElementSibling.style.display='inline-block'; this.previousElementSibling.focus();" style="background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:0.75rem;padding:0 2px;" title="Rename">&#9998;</button>
+                            <form method="POST" action="{{ url_for('delete_member', project_id=project.id, member_id=m.id) }}" style="display:inline;" onsubmit="return confirm('Remove {{ m.name }} from this trip?');">
+                                <button type="submit" style="background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:0.75rem;padding:0 2px;" title="Remove">&#10005;</button>
+                            </form>
+                        </span>
+                        <span style="color:var(--text-dim);font-size:0.7rem;padding:0 2px;">linked</span>
+                        <span class="member-chip">
+                            <span class="av">{{ partner.name[0]|upper }}</span>
+                            <span>{{ partner.name }}</span>
+                            <form method="POST" action="{{ url_for('rename_member', project_id=project.id, member_id=partner.id) }}" style="display:inline;">
+                                <input type="text" name="name" value="{{ partner.name }}" style="display:none;width:120px;padding:2px 6px;font-size:0.8rem;border:1px solid var(--border);border-radius:6px;" onkeydown="if(event.key==='Enter')this.form.submit(); if(event.key==='Escape')this.style.display='none';" onblur="this.style.display='none';">
+                            </form>
+                            <button type="button" onclick="this.previousElementSibling.style.display='inline-block'; this.previousElementSibling.focus();" style="background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:0.75rem;padding:0 2px;" title="Rename">&#9998;</button>
+                            <form method="POST" action="{{ url_for('delete_member', project_id=project.id, member_id=partner.id) }}" style="display:inline;" onsubmit="return confirm('Remove {{ partner.name }} from this trip?');">
+                                <button type="submit" style="background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:0.75rem;padding:0 2px;" title="Remove">&#10005;</button>
+                            </form>
+                        </span>
+                        <form method="POST" action="{{ url_for('unlink_partner', project_id=project.id, member_id=m.id) }}" style="display:inline;">
+                            <button type="submit" style="background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:0.7rem;padding:0 2px;text-decoration:underline;" title="Unlink">unlink</button>
+                        </form>
+                    </span>
+                {% else %}
+                    <span class="member-chip">
+                        <span class="av">{{ m.name[0]|upper }}</span>
+                        <span>{{ m.name }}</span>
+                        <form method="POST" action="{{ url_for('link_partner', project_id=project.id, member_id=m.id) }}" style="display:inline;">
+                            <select name="partner_id" onchange="if(this.value)this.form.submit();" style="font-size:0.75rem;padding:1px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface);">
+                                <option value="">Link...</option>
+                                {% for om in members if om.id != m.id and not om.partner_id %}
+                                <option value="{{ om.id }}">{{ om.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                        <form method="POST" action="{{ url_for('rename_member', project_id=project.id, member_id=m.id) }}" style="display:inline;">
+                            <input type="text" name="name" value="{{ m.name }}" style="display:none;width:120px;padding:2px 6px;font-size:0.8rem;border:1px solid var(--border);border-radius:6px;" onkeydown="if(event.key==='Enter')this.form.submit(); if(event.key==='Escape')this.style.display='none';" onblur="this.style.display='none';">
+                        </form>
+                        <button type="button" onclick="this.previousElementSibling.style.display='inline-block'; this.previousElementSibling.focus();" style="background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:0.75rem;padding:0 2px;" title="Rename">&#9998;</button>
+                        <form method="POST" action="{{ url_for('delete_member', project_id=project.id, member_id=m.id) }}" style="display:inline;" onsubmit="return confirm('Remove {{ m.name }} from this trip?');">
+                            <button type="submit" style="background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:0.75rem;padding:0 2px;" title="Remove">&#10005;</button>
+                        </form>
+                    </span>
+                {% endif %}
                 {% endfor %}
             </div>
         </div>
@@ -773,6 +850,13 @@ function showSplit(type) {
     document.getElementById('tab-equal').classList.toggle('active', type === 'equal');
     document.getElementById('tab-custom').classList.toggle('active', type === 'custom');
     if (type === 'custom') updateCustomSummary();
+}
+
+function syncPartner(cb) {
+    const pid = cb.dataset.partner;
+    if (!pid) return;
+    const partner = document.querySelector(`input[name="involved_members"][value="${pid}"]`);
+    if (partner) partner.checked = cb.checked;
 }
 
 // Also update summary when cost changes

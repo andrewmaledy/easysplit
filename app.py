@@ -107,7 +107,10 @@ def compute_balances(project_id):
                 "paid": 0.0,
                 "owed": 0.0,
                 "net": 0.0,
+                "partner_id": m["partner_id"] if "partner_id" in m.keys() else None,
             }
+        else:
+            balances[m["id"]]["partner_id"] = m["partner_id"] if "partner_id" in m.keys() else None
     return sorted(balances.values(), key=lambda b: b["name"])
 
 
@@ -165,14 +168,34 @@ def compute_raw_debts(project_id):
 
 
 def simplify_debts(balances):
+    linked = {}
+    seen = set()
+    merged = []
+    for b in balances:
+        pid = b.get("partner_id")
+        if pid and b["member_id"] not in seen and pid not in seen:
+            partner = next((x for x in balances if x["member_id"] == pid), None)
+            if partner:
+                name = f"{b['name']} & {partner['name']}"
+                net = round_cents(b["net"] + partner["net"])
+                merged.append({"name": name, "net": net, "members": [b["member_id"], pid]})
+                seen.add(b["member_id"])
+                seen.add(pid)
+                linked[b["member_id"]] = name
+                linked[pid] = name
+                continue
+        if b["member_id"] not in seen:
+            merged.append({"name": b["name"], "net": b["net"], "members": [b["member_id"]]})
+            seen.add(b["member_id"])
+
     debtors = []
     creditors = []
-    for b in balances:
-        net = b["net"]
+    for m in merged:
+        net = m["net"]
         if net < -0.01:
-            debtors.append({"name": b["name"], "amount": round_cents(-net)})
+            debtors.append({"name": m["name"], "amount": round_cents(-net)})
         elif net > 0.01:
-            creditors.append({"name": b["name"], "amount": round_cents(net)})
+            creditors.append({"name": m["name"], "amount": round_cents(net)})
 
     debtors.sort(key=lambda d: d["amount"], reverse=True)
     creditors.sort(key=lambda c: c["amount"], reverse=True)
@@ -326,8 +349,16 @@ def project(project_id):
     max_bal = max((b["net"] for b in balances), default=0)
     min_bal = min((b["net"] for b in balances), default=0)
     max_abs = max(abs(max_bal), abs(min_bal), 0.01)
+    for b in balances:
+        pid = b.get("partner_id")
+        if pid:
+            partner = next((x for x in balances if x["member_id"] == pid), None)
+            if partner:
+                combined = abs(b["net"] + partner["net"])
+                if combined > max_abs:
+                    max_abs = combined
 
-    members_json = [{"id": m["id"], "name": m["name"]} for m in members]
+    members_json = [{"id": m["id"], "name": m["name"], "partner_id": m["partner_id"] if "partner_id" in m.keys() else None} for m in members]
 
     payments = [e for e in expense_list if e["is_payment"]]
 
@@ -605,6 +636,13 @@ def delete_member(project_id, member_id):
     if shares:
         flash("Cannot delete a member with expenses. Delete their expenses first.", "error")
         return redirect(url_for("project", project_id=project_id))
+    created = db.query("SELECT 1 FROM expenses WHERE created_by_member_id = ? LIMIT 1", (member_id,))
+    if created:
+        flash("Cannot delete a member who created expenses. Delete those expenses first.", "error")
+        return redirect(url_for("project", project_id=project_id))
+    member = db.query("SELECT partner_id FROM members WHERE id = ? AND project_id = ?", (member_id, project_id), one=True)
+    if member and member["partner_id"]:
+        db.execute("UPDATE members SET partner_id = NULL WHERE id = ? AND project_id = ?", (member["partner_id"], project_id))
     db.execute("DELETE FROM members WHERE id = ? AND project_id = ?", (member_id, project_id))
     flash("Member removed.", "success")
     return redirect(url_for("project", project_id=project_id))
@@ -634,6 +672,42 @@ def delete_project(project_id):
     session.pop("project_id", None)
     flash("Trip deleted.", "success")
     return redirect(url_for("home"))
+
+
+@app.route("/projects/<int:project_id>/members/<int:member_id>/link", methods=["POST"])
+def link_partner(project_id, member_id):
+    if not require_project_access(project_id):
+        return redirect(url_for("home"))
+    partner_id = request.form.get("partner_id", type=int)
+    if not partner_id or partner_id == member_id:
+        flash("Select a different member to link.", "error")
+        return redirect(url_for("project", project_id=project_id))
+    members = get_members(project_id)
+    member_ids = {m["id"] for m in members}
+    if partner_id not in member_ids:
+        flash("Invalid member.", "error")
+        return redirect(url_for("project", project_id=project_id))
+    for m in members:
+        if m["partner_id"] == member_id or m["partner_id"] == partner_id:
+            if m["id"] != member_id and m["id"] != partner_id:
+                flash("One of those members is already linked.", "error")
+                return redirect(url_for("project", project_id=project_id))
+    db.execute("UPDATE members SET partner_id = ? WHERE id = ? AND project_id = ?", (partner_id, member_id, project_id))
+    db.execute("UPDATE members SET partner_id = ? WHERE id = ? AND project_id = ?", (member_id, partner_id, project_id))
+    flash("Members linked.", "success")
+    return redirect(url_for("project", project_id=project_id))
+
+
+@app.route("/projects/<int:project_id>/members/<int:member_id>/unlink", methods=["POST"])
+def unlink_partner(project_id, member_id):
+    if not require_project_access(project_id):
+        return redirect(url_for("home"))
+    member = db.query("SELECT partner_id FROM members WHERE id = ? AND project_id = ?", (member_id, project_id), one=True)
+    if member and member["partner_id"]:
+        db.execute("UPDATE members SET partner_id = NULL WHERE id = ? AND project_id = ?", (member_id, project_id))
+        db.execute("UPDATE members SET partner_id = NULL WHERE id = ? AND project_id = ?", (member["partner_id"], project_id))
+        flash("Members unlinked.", "success")
+    return redirect(url_for("project", project_id=project_id))
 
 
 @app.route("/projects/<int:project_id>/toggle-simplify", methods=["POST"])
