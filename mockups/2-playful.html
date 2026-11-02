@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup 2 — Playful</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #f8f6ff; color: #1a1d23; line-height: 1.5; }
+  .nav { background: #fff; border-bottom: 1px solid #ede9fe; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+  .nav-brand { font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+  .nav-brand .dot { width: 12px; height: 12px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6, #ec4899); }
+  .nav-leave { background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe; padding: 7px 16px; border-radius: 999px; font-size: 0.8125rem; font-weight: 600; text-decoration: none; }
+  .container { max-width: 800px; margin: 0 auto; padding: 28px 24px 60px; }
+  h1 { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 4px; }
+  .sub { color: #7c3aed; font-size: 0.875rem; font-weight: 500; margin-bottom: 28px; }
+  .badges { display: flex; gap: 8px; margin-bottom: 24px; }
+  .badge { background: #fff; border: 1px solid #ede9fe; border-radius: 999px; padding: 4px 14px; font-size: 0.75rem; font-weight: 600; color: #7c3aed; }
+  .badge.green { background: #ecfdf5; border-color: #a7f3d0; color: #059669; }
+  .card { background: #fff; border-radius: 20px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(139,92,246,0.06); }
+  .card-title { font-size: 0.8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #7c3aed; margin-bottom: 14px; }
+  .exp-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f5f3ff; }
+  .exp-row:last-child { border-bottom: none; }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.875rem; color: #fff; flex-shrink: 0; }
+  .av-1 { background: #8b5cf6; }
+  .av-2 { background: #ec4899; }
+  .av-3 { background: #f59e0b; }
+  .exp-info { flex: 1; }
+  .exp-desc { font-weight: 600; font-size: 0.9375rem; }
+  .exp-meta { font-size: 0.75rem; color: #999; }
+  .exp-amt { font-weight: 700; font-size: 1rem; }
+  .bal-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; }
+  .bal-name { font-weight: 600; font-size: 0.9375rem; min-width: 80px; }
+  .bal-bar { flex: 1; height: 10px; background: #f5f3ff; border-radius: 999px; overflow: hidden; position: relative; }
+  .bal-bar .fill { height: 100%; border-radius: 999px; position: absolute; }
+  .bal-bar .fill.pos { background: linear-gradient(90deg, #34d399, #10b981); left: 50%; }
+  .bal-bar .fill.neg { background: linear-gradient(90deg, #f87171, #ef4444); right: 50%; }
+  .bal-bar .center { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: #ddd6fe; }
+  .bal-amt { font-weight: 700; font-size: 0.875rem; min-width: 80px; text-align: right; }
+  .pos { color: #059669; }
+  .neg { color: #dc2626; }
+  .debt-card { display: flex; align-items: center; gap: 10px; background: #f9f7ff; border: 1px solid #ede9fe; border-radius: 14px; padding: 12px 16px; margin-bottom: 8px; }
+  .debt-card .who { font-weight: 600; font-size: 0.875rem; }
+  .debt-card .arrow { font-size: 0.8125rem; color: #999; }
+  .debt-card .amt { margin-left: auto; font-weight: 700; color: #7c3aed; font-size: 1rem; }
+  .debt-card .btn { background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: #fff; border: none; padding: 6px 16px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .add-btn { background: linear-gradient(135deg, #8b5cf6, #ec4899); color: #fff; border: none; padding: 12px 24px; border-radius: 14px; font-size: 0.9375rem; font-weight: 700; cursor: pointer; font-family: inherit; width: 100%; }
+  .members { display: flex; flex-wrap: wrap; gap: 8px; }
+  .member { display: flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #ede9fe; border-radius: 999px; padding: 6px 14px; font-size: 0.8125rem; font-weight: 600; }
+  .member .av { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.625rem; font-weight: 700; color: #fff; }
+</style>
+</head>
+<body>
+<div class="nav">
+  <span class="nav-brand"><span class="dot"></span> EasySplit</span>
+  <a href="#" class="nav-leave">Log Out</a>
+</div>
+<div class="container">
+  <h1>Vegas 2026</h1>
+  <p class="sub">Share the trip password with anyone you want to add expenses.</p>
+  <div class="badges">
+    <span class="badge">CAD</span>
+    <span class="badge green">Simplify on</span>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Add Expense</div>
+    <input type="text" placeholder="Dinner, gas, groceries..." style="width:100%;padding:12px;border:2px solid #ede9fe;border-radius:12px;font-size:0.9375rem;margin-bottom:10px;font-family:inherit;">
+    <div style="display:flex;gap:10px;margin-bottom:10px;">
+      <input type="number" placeholder="0.00" style="flex:1;padding:12px;border:2px solid #ede9fe;border-radius:12px;font-family:inherit;">
+      <input type="date" style="flex:1;padding:12px;border:2px solid #ede9fe;border-radius:12px;font-family:inherit;">
+    </div>
+    <button class="add-btn">Add Expense</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Expenses</div>
+    <div class="exp-row">
+      <div class="avatar av-1">A</div>
+      <div class="exp-info">
+        <div class="exp-desc">Dinner at Lavo</div>
+        <div class="exp-meta">Alice paid · Jan 15</div>
+      </div>
+      <div class="exp-amt">CAD 180.00</div>
+    </div>
+    <div class="exp-row">
+      <div class="avatar av-2">B</div>
+      <div class="exp-info">
+        <div class="exp-desc">Uber to strip</div>
+        <div class="exp-meta">Bob paid · Jan 15</div>
+      </div>
+      <div class="exp-amt">CAD 28.50</div>
+    </div>
+    <div class="exp-row">
+      <div class="avatar av-3">C</div>
+      <div class="exp-info">
+        <div class="exp-desc">Pool cabana</div>
+        <div class="exp-meta">Charlie paid · Jan 16</div>
+      </div>
+      <div class="exp-amt">CAD 320.00</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Balances</div>
+    <div class="bal-row">
+      <div class="bal-name">Alice</div>
+      <div class="bal-bar"><div class="center"></div><div class="fill pos" style="width:42%;"></div></div>
+      <div class="bal-amt pos">+CAD 210</div>
+    </div>
+    <div class="bal-row">
+      <div class="bal-name">Bob</div>
+      <div class="bal-bar"><div class="center"></div><div class="fill neg" style="width:12%;"></div></div>
+      <div class="bal-amt neg">-CAD 60</div>
+    </div>
+    <div class="bal-row">
+      <div class="bal-name">Charlie</div>
+      <div class="bal-bar"><div class="center"></div><div class="fill neg" style="width:30%;"></div></div>
+      <div class="bal-amt neg">-CAD 150</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Settle Up</div>
+    <div class="debt-card">
+      <div class="avatar av-2">B</div>
+      <div><div class="who">Bob</div><div class="arrow">pays Alice</div></div>
+      <div class="amt">CAD 60</div>
+      <button class="btn">Settle</button>
+    </div>
+    <div class="debt-card">
+      <div class="avatar av-3">C</div>
+      <div><div class="who">Charlie</div><div class="arrow">pays Alice</div></div>
+      <div class="amt">CAD 150</div>
+      <button class="btn">Settle</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Members</div>
+    <div class="members">
+      <span class="member"><span class="av" style="background:#8b5cf6;">A</span> Alice</span>
+      <span class="member"><span class="av" style="background:#ec4899;">B</span> Bob</span>
+      <span class="member"><span class="av" style="background:#f59e0b;">C</span> Charlie</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

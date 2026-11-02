@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup 3 — Dark Fintech</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #0a0b0f; color: #e4e6eb; line-height: 1.5; }
+  .nav { background: #121319; border-bottom: 1px solid #1e1f26; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+  .nav-brand { font-weight: 800; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; letter-spacing: -0.02em; }
+  .nav-brand .dot { width: 10px; height: 10px; border-radius: 50%; background: #6366f1; box-shadow: 0 0 8px rgba(99,102,241,0.5); }
+  .nav-leave { background: #1a1c24; color: #8b8e99; border: 1px solid #2a2d36; padding: 7px 16px; border-radius: 8px; font-size: 0.8125rem; font-weight: 500; text-decoration: none; }
+  .container { max-width: 920px; margin: 0 auto; padding: 32px 24px 60px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 4px; color: #fff; }
+  .sub { color: #5a5d6b; font-size: 0.8125rem; margin-bottom: 28px; }
+  .pills { display: flex; gap: 8px; margin-bottom: 28px; }
+  .pill { background: #12131a; border: 1px solid #1e1f26; border-radius: 8px; padding: 4px 12px; font-size: 0.75rem; font-weight: 500; color: #8b8e99; }
+  .pill.on { background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.3); color: #818cf8; }
+  .card { background: #12131a; border: 1px solid #1e1f26; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+  .card-title { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #5a5d6b; margin-bottom: 16px; }
+  .exp-row { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #1a1c24; }
+  .exp-row:last-child { border-bottom: none; }
+  .exp-info { flex: 1; }
+  .exp-desc { font-weight: 600; font-size: 0.9375rem; color: #e4e6eb; }
+  .exp-meta { font-size: 0.75rem; color: #5a5d6b; margin-top: 2px; }
+  .exp-amt { font-weight: 700; font-size: 0.9375rem; color: #fff; }
+  .exp-actions { display: flex; gap: 6px; margin-left: 12px; }
+  .btn-sm { background: #1a1c24; border: 1px solid #2a2d36; color: #8b8e99; padding: 4px 10px; border-radius: 6px; font-size: 0.6875rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .btn-sm:hover { border-color: #6366f1; color: #818cf8; }
+  .add-input { width: 100%; background: #0a0b0f; border: 1px solid #1e1f26; border-radius: 8px; padding: 11px 14px; color: #e4e6eb; font-size: 0.875rem; font-family: inherit; margin-bottom: 10px; }
+  .add-input:focus { outline: none; border-color: #6366f1; }
+  .add-btn { background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; border: none; padding: 12px; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; font-family: inherit; width: 100%; }
+  .bal-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #1a1c24; }
+  .bal-row:last-child { border-bottom: none; }
+  .bal-name { font-weight: 500; font-size: 0.875rem; min-width: 80px; color: #e4e6eb; }
+  .bal-bar { flex: 1; height: 6px; background: #0a0b0f; border-radius: 999px; overflow: hidden; position: relative; }
+  .bal-bar .center { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: #2a2d36; }
+  .bal-bar .fill { height: 100%; border-radius: 999px; position: absolute; }
+  .bal-bar .fill.pos { background: linear-gradient(90deg, #10b981, #34d399); left: 50%; }
+  .bal-bar .fill.neg { background: linear-gradient(90deg, #f43f5e, #fb7185); right: 50%; }
+  .bal-amt { font-weight: 700; font-size: 0.8125rem; min-width: 80px; text-align: right; }
+  .pos { color: #34d399; }
+  .neg { color: #fb7185; }
+  .debt-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: #0a0b0f; border: 1px solid #1a1c24; border-radius: 10px; margin-bottom: 8px; }
+  .debt-card .who { font-weight: 600; font-size: 0.875rem; color: #e4e6eb; }
+  .debt-card .arrow { font-size: 0.75rem; color: #5a5d6b; }
+  .debt-card .amt { margin-left: auto; font-weight: 700; color: #818cf8; font-size: 0.9375rem; }
+  .debt-card .btn { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: #34d399; padding: 5px 14px; border-radius: 6px; font-size: 0.6875rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .members { display: flex; flex-wrap: wrap; gap: 8px; }
+  .member { background: #1a1c24; border: 1px solid #2a2d36; border-radius: 999px; padding: 5px 12px; font-size: 0.8125rem; font-weight: 500; color: #e4e6eb; }
+</style>
+</head>
+<body>
+<div class="nav">
+  <span class="nav-brand"><span class="dot"></span> EasySplit</span>
+  <a href="#" class="nav-leave">Log Out</a>
+</div>
+<div class="container">
+  <h1>Vegas 2026</h1>
+  <p class="sub">Share the trip password with anyone you want to add expenses.</p>
+  <div class="pills">
+    <span class="pill">CAD</span>
+    <span class="pill on">Simplify on</span>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <div class="card-title">Add Expense</div>
+        <input type="text" class="add-input" placeholder="What was it for?">
+        <div style="display:flex;gap:10px;">
+          <input type="number" class="add-input" placeholder="0.00" style="flex:1;margin-bottom:10px;">
+          <input type="date" class="add-input" style="flex:1;margin-bottom:10px;">
+        </div>
+        <button class="add-btn">Add Expense</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Expenses</div>
+        <div class="exp-row">
+          <div class="exp-info">
+            <div class="exp-desc">Dinner at Lavo</div>
+            <div class="exp-meta">Alice paid · Jan 15</div>
+          </div>
+          <div class="exp-amt">CAD 180.00</div>
+          <div class="exp-actions">
+            <button class="btn-sm">Edit</button>
+            <button class="btn-sm">Del</button>
+          </div>
+        </div>
+        <div class="exp-row">
+          <div class="exp-info">
+            <div class="exp-desc">Uber to strip</div>
+            <div class="exp-meta">Bob paid · Jan 15</div>
+          </div>
+          <div class="exp-amt">CAD 28.50</div>
+          <div class="exp-actions">
+            <button class="btn-sm">Edit</button>
+            <button class="btn-sm">Del</button>
+          </div>
+        </div>
+        <div class="exp-row">
+          <div class="exp-info">
+            <div class="exp-desc">Pool cabana</div>
+            <div class="exp-meta">Charlie paid · Jan 16</div>
+          </div>
+          <div class="exp-amt">CAD 320.00</div>
+          <div class="exp-actions">
+            <button class="btn-sm">Edit</button>
+            <button class="btn-sm">Del</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-title">Balances</div>
+        <div class="bal-row">
+          <div class="bal-name">Alice</div>
+          <div class="bal-bar"><div class="center"></div><div class="fill pos" style="width:42%;"></div></div>
+          <div class="bal-amt pos">+CAD 210</div>
+        </div>
+        <div class="bal-row">
+          <div class="bal-name">Bob</div>
+          <div class="bal-bar"><div class="center"></div><div class="fill neg" style="width:12%;"></div></div>
+          <div class="bal-amt neg">-CAD 60</div>
+        </div>
+        <div class="bal-row">
+          <div class="bal-name">Charlie</div>
+          <div class="bal-bar"><div class="center"></div><div class="fill neg" style="width:30%;"></div></div>
+          <div class="bal-amt neg">-CAD 150</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Settle Up</div>
+        <div class="debt-card">
+          <div><div class="who">Bob</div><div class="arrow">pays Alice</div></div>
+          <div class="amt">CAD 60</div>
+          <button class="btn">Settle</button>
+        </div>
+        <div class="debt-card">
+          <div><div class="who">Charlie</div><div class="arrow">pays Alice</div></div>
+          <div class="amt">CAD 150</div>
+          <button class="btn">Settle</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Members</div>
+        <div class="members">
+          <span class="member">Alice</span>
+          <span class="member">Bob</span>
+          <span class="member">Charlie</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

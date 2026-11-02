@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup 4 — Compact Cards</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #f0f1f3; color: #0f172a; line-height: 1.5; }
+  .nav { background: #fff; border-bottom: 1px solid #e2e8f0; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+  .nav-brand { font-weight: 800; font-size: 1rem; letter-spacing: -0.02em; }
+  .nav-brand .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #0f172a; margin-right: 6px; }
+  .nav-leave { font-size: 0.8125rem; color: #64748b; text-decoration: none; }
+  .container { max-width: 720px; margin: 0 auto; padding: 20px 16px 60px; }
+  h1 { font-size: 1.375rem; font-weight: 800; letter-spacing: -0.03em; }
+  .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .header-pills { display: flex; gap: 6px; }
+  .pill { background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 3px 10px; font-size: 0.6875rem; font-weight: 600; color: #475569; }
+  .pill.on { background: #0f172a; color: #fff; border-color: #0f172a; }
+  .sub { color: #94a3b8; font-size: 0.75rem; margin-bottom: 20px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; }
+  .card.compact { padding: 12px; }
+  .card-title { font-size: 0.6875rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+  .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
+  .stat-row:not(:last-child) { border-bottom: 1px solid #f1f5f9; }
+  .stat-name { font-size: 0.8125rem; font-weight: 500; }
+  .stat-amt { font-size: 0.8125rem; font-weight: 700; }
+  .pos { color: #059669; }
+  .neg { color: #dc2626; }
+  .exp-table { width: 100%; }
+  .exp-table th { text-align: left; font-size: 0.625rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; padding: 6px 0; border-bottom: 1px solid #e2e8f0; }
+  .exp-table th.r { text-align: right; }
+  .exp-table td { padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.8125rem; }
+  .exp-table td.r { text-align: right; font-weight: 700; }
+  .exp-table tr:last-child td { border-bottom: none; }
+  .exp-desc { font-weight: 600; }
+  .exp-meta { font-size: 0.6875rem; color: #94a3b8; }
+  .add-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .add-row input, .add-row select { flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; font-size: 0.8125rem; font-family: inherit; }
+  .add-btn { background: #0f172a; color: #fff; border: none; padding: 9px; border-radius: 6px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; font-family: inherit; width: 100%; }
+  .debt-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
+  .debt-row:last-child { border-bottom: none; }
+  .debt-who { font-size: 0.8125rem; font-weight: 500; }
+  .debt-who .arrow { color: #94a3b8; font-size: 0.75rem; }
+  .debt-amt { font-weight: 700; font-size: 0.8125rem; color: #0f172a; margin-right: 8px; }
+  .debt-btn { background: #f8fafc; border: 1px solid #e2e8f0; padding: 4px 12px; border-radius: 6px; font-size: 0.6875rem; font-weight: 600; cursor: pointer; font-family: inherit; color: #475569; }
+  .debt-btn:hover { border-color: #0f172a; color: #0f172a; }
+  .members { display: flex; flex-wrap: wrap; gap: 4px; }
+  .member { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 3px 10px; font-size: 0.75rem; font-weight: 500; }
+  .full { grid-column: 1 / -1; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+</style>
+</head>
+<body>
+<div class="nav">
+  <span class="nav-brand"><span class="dot"></span>EasySplit</span>
+  <a href="#" class="nav-leave">Log Out</a>
+</div>
+<div class="container">
+  <div class="header-row">
+    <h1>Vegas 2026</h1>
+    <div class="header-pills">
+      <span class="pill">CAD</span>
+      <span class="pill on">Simplify</span>
+    </div>
+  </div>
+  <p class="sub">Share the trip password with anyone you want to add expenses.</p>
+
+  <div class="two-col" style="margin-bottom:12px;">
+    <div class="card compact">
+      <div class="card-title">Balances</div>
+      <div class="stat-row">
+        <span class="stat-name">Alice</span>
+        <span class="stat-amt pos">+CAD 210.00</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-name">Bob</span>
+        <span class="stat-amt neg">-CAD 60.00</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-name">Charlie</span>
+        <span class="stat-amt neg">-CAD 150.00</span>
+      </div>
+    </div>
+    <div class="card compact">
+      <div class="card-title">Settle Up</div>
+      <div class="debt-row">
+        <div class="debt-who">Bob → Alice <span class="arrow">CAD 60</span></div>
+        <button class="debt-btn">Settle</button>
+      </div>
+      <div class="debt-row">
+        <div class="debt-who">Charlie → Alice <span class="arrow">CAD 150</span></div>
+        <button class="debt-btn">Settle</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px;">
+    <div class="card-title">Add Expense</div>
+    <div class="add-row">
+      <input type="text" placeholder="Description" style="flex:2;">
+      <input type="number" placeholder="Cost" style="flex:1;">
+      <input type="date" style="flex:1;">
+    </div>
+    <button class="add-btn">Add</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Expenses</div>
+    <table class="exp-table">
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th>Paid by</th>
+          <th class="r">Cost</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="exp-desc">Dinner at Lavo</div><div class="exp-meta">Jan 15</div></td>
+          <td>Alice</td>
+          <td class="r">CAD 180.00</td>
+        </tr>
+        <tr>
+          <td><div class="exp-desc">Uber to strip</div><div class="exp-meta">Jan 15</div></td>
+          <td>Bob</td>
+          <td class="r">CAD 28.50</td>
+        </tr>
+        <tr>
+          <td><div class="exp-desc">Pool cabana</div><div class="exp-meta">Jan 16</div></td>
+          <td>Charlie</td>
+          <td class="r">CAD 320.00</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card compact">
+    <div class="card-title">Members</div>
+    <div class="members">
+      <span class="member">Alice</span>
+      <span class="member">Bob</span>
+      <span class="member">Charlie</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

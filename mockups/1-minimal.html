@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup 1 — Minimal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #fafafa; color: #111; line-height: 1.5; }
+  .nav { max-width: 680px; margin: 0 auto; padding: 24px 20px; display: flex; justify-content: space-between; align-items: center; }
+  .nav-brand { font-weight: 700; font-size: 1rem; letter-spacing: -0.02em; }
+  .nav-leave { font-size: 0.8125rem; color: #999; text-decoration: none; }
+  .container { max-width: 680px; margin: 0 auto; padding: 0 20px 60px; }
+  h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 4px; }
+  .sub { color: #999; font-size: 0.8125rem; margin-bottom: 32px; }
+  .sec { margin-bottom: 40px; }
+  .sec-title { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #999; margin-bottom: 12px; }
+  .row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
+  .row:last-child { border-bottom: none; }
+  .desc { font-weight: 500; font-size: 0.9375rem; }
+  .meta { font-size: 0.75rem; color: #999; margin-top: 2px; }
+  .amt { font-weight: 600; font-size: 0.9375rem; }
+  .pos { color: #16a34a; }
+  .neg { color: #dc2626; }
+  .add-form { background: #fff; border: 1px solid #eee; border-radius: 8px; padding: 16px; margin-bottom: 32px; }
+  .add-form input, .add-form select { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.875rem; font-family: inherit; margin-bottom: 10px; }
+  .add-form button { background: #111; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-size: 0.875rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .settle-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
+  .settle-item:last-child { border-bottom: none; }
+  .settle-who { font-size: 0.875rem; }
+  .settle-who .arrow { color: #999; font-size: 0.8125rem; }
+  .settle-btn { background: none; border: 1px solid #ddd; padding: 4px 12px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; font-family: inherit; }
+  .members { display: flex; flex-wrap: wrap; gap: 6px; }
+  .member { background: #f5f5f5; border-radius: 999px; padding: 4px 12px; font-size: 0.8125rem; font-weight: 500; }
+  .toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8125rem; color: #999; cursor: pointer; }
+  .toggle .dot { width: 8px; height: 8px; border-radius: 50%; background: #16a34a; }
+</style>
+</head>
+<body>
+<div class="nav">
+  <span class="nav-brand">EasySplit</span>
+  <a href="#" class="nav-leave">Log Out</a>
+</div>
+<div class="container">
+  <h1>Vegas 2026</h1>
+  <p class="sub">CAD · <span class="toggle"><span class="dot"></span> Simplify on</span></p>
+
+  <div class="sec">
+    <div class="sec-title">Add Expense</div>
+    <div class="add-form">
+      <input type="text" placeholder="What was it for?" value="">
+      <div style="display:flex;gap:10px;">
+        <input type="number" placeholder="0.00" style="flex:1;">
+        <input type="date" style="flex:1;">
+      </div>
+      <select><option>Alice</option><option>Bob</option><option>Charlie</option></select>
+      <button>Add</button>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">Expenses</div>
+    <div class="row">
+      <div>
+        <div class="desc">Dinner at Lavo</div>
+        <div class="meta">Alice paid · Jan 15</div>
+      </div>
+      <div class="amt">CAD 180.00</div>
+    </div>
+    <div class="row">
+      <div>
+        <div class="desc">Uber to strip</div>
+        <div class="meta">Bob paid · Jan 15</div>
+      </div>
+      <div class="amt">CAD 28.50</div>
+    </div>
+    <div class="row">
+      <div>
+        <div class="desc">Pool cabana</div>
+        <div class="meta">Charlie paid · Jan 16</div>
+      </div>
+      <div class="amt">CAD 320.00</div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">Balances</div>
+    <div class="row">
+      <div class="desc">Alice</div>
+      <div class="amt pos">+CAD 210.00</div>
+    </div>
+    <div class="row">
+      <div class="desc">Bob</div>
+      <div class="amt neg">-CAD 60.00</div>
+    </div>
+    <div class="row">
+      <div class="desc">Charlie</div>
+      <div class="amt neg">-CAD 150.00</div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">Settle Up</div>
+    <div class="settle-item">
+      <div class="settle-who">Bob → Alice <span class="arrow">· CAD 60.00</span></div>
+      <button class="settle-btn">Settle</button>
+    </div>
+    <div class="settle-item">
+      <div class="settle-who">Charlie → Alice <span class="arrow">· CAD 150.00</span></div>
+      <button class="settle-btn">Settle</button>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">Members</div>
+    <div class="members">
+      <span class="member">Alice</span>
+      <span class="member">Bob</span>
+      <span class="member">Charlie</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>
