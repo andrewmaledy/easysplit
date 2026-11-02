@@ -200,7 +200,19 @@ def fmt_money(value):
     return f"{value:,.2f}"
 
 
+def fmt_date(value):
+    if not value:
+        return ""
+    try:
+        from datetime import datetime
+        d = datetime.strptime(value, "%Y-%m-%d")
+        return d.strftime("%b %-d, %Y")
+    except (ValueError, TypeError):
+        return value
+
+
 app.jinja_env.filters["money"] = fmt_money
+app.jinja_env.filters["fmtdate"] = fmt_date
 
 
 @app.route("/")
@@ -302,6 +314,7 @@ def project(project_id):
             "cost": e["cost"],
             "currency": e["currency"],
             "date": e["date"],
+            "details": e["details"] if "details" in e.keys() else None,
             "created_by_name": e["created_by_name"],
             "is_payment": bool(e["is_payment"]) if "is_payment" in e.keys() else False,
             "shares": shares,
@@ -316,12 +329,15 @@ def project(project_id):
 
     members_json = [{"id": m["id"], "name": m["name"]} for m in members]
 
+    payments = [e for e in expense_list if e["is_payment"]]
+
     return render_template(
         "project.html",
         project=project,
         members=members,
         members_json=members_json,
         expenses=expense_list,
+        payments=payments,
         balances=balances,
         simplified=simplified,
         today=date.today().isoformat(),
@@ -336,6 +352,7 @@ def process_expense_form(project_id, members):
     cost_str = request.form.get("cost", "0").strip()
     cost = float(cost_str) if cost_str else 0.0
     description = request.form.get("description", "").strip()
+    details = request.form.get("details", "").strip()
     expense_date = request.form.get("date") or date.today().isoformat()
     created_by = request.form.get("created_by_member_id", type=int)
 
@@ -388,6 +405,7 @@ def process_expense_form(project_id, members):
 
     return {
         "description": description,
+        "details": details,
         "cost": cost,
         "date": expense_date,
         "split_type": split_type,
@@ -420,10 +438,10 @@ def add_expense(project_id):
 
     expense_id = db.execute(
         """INSERT INTO expenses
-           (project_id, description, cost, currency, date, split_type, created_by_member_id)
-           VALUES (?, ?, ?, ?, ?, ?, ?)""",
+           (project_id, description, cost, currency, date, split_type, details, created_by_member_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
         (project_id, data["description"], data["cost"], project["currency"],
-         data["date"], data["split_type"], data["created_by"]),
+         data["date"], data["split_type"], data["details"], data["created_by"]),
         return_id=True,
     )
 
@@ -455,6 +473,7 @@ def expense_data(project_id, expense_id):
         "cost": expense["cost"],
         "date": expense["date"],
         "split_type": expense["split_type"],
+        "details": expense["details"] if "details" in expense.keys() else None,
         "created_by_member_id": expense["created_by_member_id"],
         "shares": [{"member_id": s["member_id"], "member_name": s["member_name"],
                      "paid_share": s["paid_share"], "owed_share": s["owed_share"]}
@@ -484,10 +503,10 @@ def edit_expense(project_id, expense_id):
         return redirect(url_for("project", project_id=project_id))
 
     db.execute(
-        """UPDATE expenses SET description = ?, cost = ?, date = ?, split_type = ?,
+        """UPDATE expenses SET description = ?, cost = ?, date = ?, split_type = ?, details = ?,
            created_by_member_id = ? WHERE id = ? AND project_id = ?""",
         (data["description"], data["cost"], data["date"], data["split_type"],
-         data["created_by"], expense_id, project_id),
+         data["details"], data["created_by"], expense_id, project_id),
     )
     db.execute("DELETE FROM shares WHERE expense_id = ?", (expense_id,))
     for member_id, paid, owed in data["shares_data"]:
@@ -563,6 +582,58 @@ def add_member(project_id):
     else:
         flash(f"{name} added. They'll be included in future expenses.", "success")
     return redirect(url_for("project", project_id=project_id))
+
+
+@app.route("/projects/<int:project_id>/members/<int:member_id>/rename", methods=["POST"])
+def rename_member(project_id, member_id):
+    if not require_project_access(project_id):
+        return redirect(url_for("home"))
+    name = request.form.get("name", "").strip()
+    if not name:
+        flash("Name is required.", "error")
+        return redirect(url_for("project", project_id=project_id))
+    db.execute("UPDATE members SET name = ? WHERE id = ? AND project_id = ?", (name, member_id, project_id))
+    flash("Member renamed.", "success")
+    return redirect(url_for("project", project_id=project_id))
+
+
+@app.route("/projects/<int:project_id>/members/<int:member_id>/delete", methods=["POST"])
+def delete_member(project_id, member_id):
+    if not require_project_access(project_id):
+        return redirect(url_for("home"))
+    shares = db.query("SELECT 1 FROM shares WHERE member_id = ? LIMIT 1", (member_id,))
+    if shares:
+        flash("Cannot delete a member with expenses. Delete their expenses first.", "error")
+        return redirect(url_for("project", project_id=project_id))
+    db.execute("DELETE FROM members WHERE id = ? AND project_id = ?", (member_id, project_id))
+    flash("Member removed.", "success")
+    return redirect(url_for("project", project_id=project_id))
+
+
+@app.route("/projects/<int:project_id>/edit", methods=["POST"])
+def edit_project(project_id):
+    if not require_project_access(project_id):
+        return redirect(url_for("home"))
+    name = request.form.get("name", "").strip()
+    currency = request.form.get("currency", "").strip().upper()
+    if not name:
+        flash("Trip name is required.", "error")
+        return redirect(url_for("project", project_id=project_id))
+    if not currency:
+        currency = "CAD"
+    db.execute("UPDATE projects SET name = ?, currency = ? WHERE id = ?", (name, currency, project_id))
+    flash("Trip updated.", "success")
+    return redirect(url_for("project", project_id=project_id))
+
+
+@app.route("/projects/<int:project_id>/delete", methods=["POST"])
+def delete_project(project_id):
+    if not require_project_access(project_id):
+        return redirect(url_for("home"))
+    db.execute("DELETE FROM projects WHERE id = ?", (project_id,))
+    session.pop("project_id", None)
+    flash("Trip deleted.", "success")
+    return redirect(url_for("home"))
 
 
 @app.route("/projects/<int:project_id>/toggle-simplify", methods=["POST"])

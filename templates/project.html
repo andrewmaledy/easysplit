@@ -10,6 +10,7 @@
             Simplify debts: {{ 'On' if project.simplify_by_default else 'Off' }}
         </button>
     </form>
+    <button type="button" class="pill" style="cursor:pointer;border:1px solid var(--border);font-family:inherit;font-size:0.8125rem;font-weight:500;background:var(--surface);" onclick="openTripSettings()">&#9881; Trip Settings</button>
 </div>
 <p style="color:var(--text-dim);font-size:0.875rem;margin-bottom:24px;">Share the trip password with anyone you want to add expenses.</p>
 
@@ -44,6 +45,21 @@
             {% endif %}
         {% else %}
         <div class="card empty-state"><p>Simplify debts is off for this trip.</p></div>
+        {% endif %}
+
+        {% if payments %}
+        <div style="margin-top:16px;">
+            <h3 style="font-size:0.8125rem;color:var(--text-dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">Payment History</h3>
+            {% for p in payments %}
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--border);font-size:0.875rem;">
+                <div>
+                    <span style="font-weight:500;">{{ p.description }}</span>
+                    <span style="color:var(--text-dim);margin-left:4px;">{{ p.date|fmtdate }}</span>
+                </div>
+                <span style="font-weight:600;">{{ project.currency }} {{ p.cost|money }}</span>
+            </div>
+            {% endfor %}
+        </div>
         {% endif %}
     </div>
 
@@ -80,6 +96,10 @@
                 <div class="field">
                     <label for="description">What was it for?</label>
                     <input type="text" id="description" name="description" required placeholder="Dinner, gas, groceries...">
+                </div>
+                <div class="field">
+                    <label for="details">Notes <span style="color:var(--text-dim);font-weight:400;">(optional)</span></label>
+                    <textarea id="details" name="details" rows="2" placeholder="Add any extra details..." style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:0.9375rem;font-family:inherit;resize:vertical;background:var(--surface);color:var(--text);"></textarea>
                 </div>
                 <div class="row">
                     <div class="field" style="flex:1;">
@@ -210,10 +230,11 @@
                 <tbody>
                 {% for e in expenses %}
                     <tr{% if e.is_payment %} class="payment-row"{% endif %}>
-                        <td style="color:var(--text-dim);font-size:0.875rem;white-space:nowrap;">{{ e.date }}</td>
+                        <td style="color:var(--text-dim);font-size:0.875rem;white-space:nowrap;">{{ e.date|fmtdate }}</td>
                         <td style="font-weight:500;">
                             {{ e.description }}
                             {% if e.is_payment %}<span class="pill green" style="margin-left:6px;font-size:0.7rem;padding:1px 8px;">Payment</span>{% endif %}
+                            {% if e.details %}<div style="font-size:0.75rem;color:var(--text-dim);font-weight:400;margin-top:2px;">{{ e.details }}</div>{% endif %}
                         </td>
                         <td style="color:var(--text-dim);">{{ e.created_by_name or '—' }}</td>
                         <td class="right" style="font-weight:600;">{{ project.currency }} {{ e.cost|money }}</td>
@@ -256,9 +277,47 @@
         <div class="card">
             <div class="members-list">
                 {% for m in members %}
-                <span class="member-chip"><span class="av">{{ m.name[0]|upper }}</span>{{ m.name }}</span>
+                <span class="member-chip">
+                    <span class="av">{{ m.name[0]|upper }}</span>
+                    <span>{{ m.name }}</span>
+                    <form method="POST" action="{{ url_for('rename_member', project_id=project.id, member_id=m.id) }}" style="display:inline;">
+                        <input type="text" name="name" value="{{ m.name }}" style="display:none;width:120px;padding:2px 6px;font-size:0.8rem;border:1px solid var(--border);border-radius:6px;" onkeydown="if(event.key==='Enter')this.form.submit(); if(event.key==='Escape')this.style.display='none';" onblur="this.style.display='none';">
+                    </form>
+                    <button type="button" onclick="this.previousElementSibling.style.display='inline-block'; this.previousElementSibling.focus();" style="background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:0.75rem;padding:0 2px;" title="Rename">&#9998;</button>
+                    <form method="POST" action="{{ url_for('delete_member', project_id=project.id, member_id=m.id) }}" style="display:inline;" onsubmit="return confirm('Remove {{ m.name }} from this trip?');">
+                        <button type="submit" style="background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:0.75rem;padding:0 2px;" title="Remove">&times;</button>
+                    </form>
+                </span>
                 {% endfor %}
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Trip Settings Modal -->
+<div id="tripsettings-modal" class="modal-overlay" style="display:none;">
+    <div class="modal" style="max-width:440px;">
+        <div class="modal-header">
+            <h2>Trip Settings</h2>
+            <button class="modal-close" onclick="closeTripSettings()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form method="POST" action="{{ url_for('edit_project', project_id=project.id) }}">
+                <div class="field">
+                    <label for="trip_name">Trip Name</label>
+                    <input type="text" id="trip_name" name="name" value="{{ project.name }}" required>
+                </div>
+                <div class="field">
+                    <label for="trip_currency">Currency</label>
+                    <input type="text" id="trip_currency" name="currency" value="{{ project.currency }}" required maxlength="3" style="text-transform:uppercase;">
+                </div>
+                <button type="submit" class="btn-primary" style="width:100%;">Save Changes</button>
+            </form>
+            <hr style="margin:20px 0;border:none;border-top:1px solid var(--border);">
+            <form method="POST" action="{{ url_for('delete_project', project_id=project.id) }}"
+                  onsubmit="return confirm('Delete this trip and ALL its data? This cannot be undone.');">
+                <button type="submit" class="btn-danger" style="width:100%;">Delete Trip</button>
+            </form>
         </div>
     </div>
 </div>
@@ -313,6 +372,10 @@
                 <div class="field">
                     <label for="edit_description">What was it for?</label>
                     <input type="text" id="edit_description" name="description" required>
+                </div>
+                <div class="field">
+                    <label for="edit_details">Notes <span style="color:var(--text-dim);font-weight:400;">(optional)</span></label>
+                    <textarea id="edit_details" name="details" rows="2" placeholder="Add any extra details..." style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:0.9375rem;font-family:inherit;resize:vertical;background:var(--surface);color:var(--text);"></textarea>
                 </div>
                 <div class="row">
                     <div class="field" style="flex:1;">
@@ -497,6 +560,7 @@ async function openEditExpense(expenseId) {
     const data = await resp.json();
 
     document.getElementById('edit_description').value = data.description;
+    document.getElementById('edit_details').value = data.details || '';
     document.getElementById('edit_cost').value = data.cost;
     document.getElementById('edit_date').value = data.date;
     document.getElementById('edit_created_by').value = data.created_by_member_id || '';
@@ -654,6 +718,17 @@ function closeAddMember() {
     document.getElementById('addmember-modal').style.display = 'none';
     document.body.style.overflow = '';
 }
+function openTripSettings() {
+    document.getElementById('tripsettings-modal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+function closeTripSettings() {
+    document.getElementById('tripsettings-modal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+document.getElementById('tripsettings-modal').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeTripSettings();
+});
 function selectRecalc(which) {
     document.getElementById('rc-future').classList.toggle('selected', which === 'future');
     document.getElementById('rc-past').classList.toggle('selected', which === 'past');
@@ -867,6 +942,7 @@ document.addEventListener('keydown', (e) => {
         closeAddMember();
         closeEditExpense();
         closeSettle();
+        closeTripSettings();
     }
 });
 </script>

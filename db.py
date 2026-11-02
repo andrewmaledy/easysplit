@@ -22,6 +22,9 @@ def init_db():
     cols = [r[1] for r in db.execute("PRAGMA table_info(expenses)")]
     if "is_payment" not in cols:
         db.execute("ALTER TABLE expenses ADD COLUMN is_payment INTEGER NOT NULL DEFAULT 0")
+    cols = [r[1] for r in db.execute("PRAGMA table_info(expenses)")]
+    if "details" not in cols:
+        db.execute("ALTER TABLE expenses ADD COLUMN details TEXT")
     db.commit()
     db.close()
 
