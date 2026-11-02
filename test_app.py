@@ -186,6 +186,55 @@ def run():
     assert b"Enter a Trip" in resp.data, "should redirect to home page, not 403"
     print("PASS: unauthenticated project URL redirects home (no 403)")
 
+    # 12. Add member with recalculate: new person joins past equal-split expenses
+    with client.session_transaction() as sess:
+        sess["project_id"] = 1
+    # Add a fresh equal-split expense: $40 lunch, Alice paid, all 3 involved
+    client.post("/projects/1/expenses", data={
+        "description": "Lunch2",
+        "cost": "40",
+        "date": "2026-01-04",
+        "created_by_member_id": "1",
+        "payer_id": "1",
+        "split_type": "equal",
+        "involved_members": ["1", "2", "3"],
+    }, follow_redirects=True)
+    # Now add Dave with recalculate -> Lunch2 splits among 4: each owes 10
+    resp = client.post("/projects/1/members", data={
+        "name": "Dave",
+        "recalculate": "on",
+    }, follow_redirects=True)
+    assert b"Dave" in resp.data, "Dave should appear in members"
+
+    resp = client.get("/projects/1/balances")
+    data = resp.get_json()
+    bal = {b["name"]: b["net"] for b in data["balances"]}
+    # Remaining expenses: Gas ($60 custom), Coffee ($20 custom), Lunch2 ($40 equal)
+    # Gas: Alice paid 60 owed 0, Bob owed 30, Charlie owed 30
+    # Coffee: Alice paid 20 owed 10, Bob owed 10, Charlie excluded
+    # Lunch2 (was 3-way @13.33 each, now 4-way @10 each after recalculate):
+    #   Alice paid 40 owed 10, Bob owed 10, Charlie owed 10, Dave owed 10
+    # Alice: paid 120, owed 0+10+10=20 -> net 100
+    # Bob:   paid 0, owed 30+10+10=50 -> net -50
+    # Charlie: paid 0, owed 30+0+10=40 -> net -40
+    # Dave: paid 0, owed 10 -> net -10
+    assert abs(bal["Alice"] - 100) < 0.01, f"Alice net should be 100, got {bal['Alice']}"
+    assert abs(bal["Bob"] - (-50)) < 0.01, f"Bob net should be -50, got {bal['Bob']}"
+    assert abs(bal["Charlie"] - (-40)) < 0.01, f"Charlie net should be -40, got {bal['Charlie']}"
+    assert abs(bal["Dave"] - (-10)) < 0.01, f"Dave net should be -10, got {bal['Dave']}"
+    print(f"PASS: add member with recalculate — {bal}")
+
+    # 13. Add member without recalculate: doesn't affect past expenses
+    resp = client.post("/projects/1/members", data={
+        "name": "Eve",
+        "recalculate": "off",
+    }, follow_redirects=True)
+    resp = client.get("/projects/1/balances")
+    data = resp.get_json()
+    bal = {b["name"]: b["net"] for b in data["balances"]}
+    assert abs(bal["Eve"]) < 0.01, f"Eve net should be 0, got {bal['Eve']}"
+    print("PASS: add member without recalculate")
+
     print("\n✅ All tests passed!")
 
 run()

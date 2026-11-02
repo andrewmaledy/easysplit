@@ -475,6 +475,16 @@
         }
         .cm-field input:focus { outline: none; border-color: var(--accent); }
         .custom-member.excluded .cm-field input { opacity: 0.4; }
+
+        .radio-cards { display: flex; flex-direction: column; gap: 10px; }
+        .radio-card {
+            display: flex; align-items: flex-start; gap: 10px;
+            background: var(--surface-2); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); padding: 14px 16px;
+            cursor: pointer; transition: all 0.15s; font-family: inherit;
+        }
+        .radio-card input[type=radio] { margin-top: 2px; accent-color: var(--accent); width: 16px; height: 16px; }
+        .radio-card.selected { border-color: var(--accent); background: var(--accent-soft); }
     </style>
     {% block head %}{% endblock %}
 </head>

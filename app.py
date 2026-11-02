@@ -387,9 +387,9 @@ def add_expense(project_id):
 
     expense_id = db.execute(
         """INSERT INTO expenses
-           (project_id, description, cost, currency, date, created_by_member_id)
-           VALUES (?, ?, ?, ?, ?, ?)""",
-        (project_id, description, cost, project["currency"], expense_date, created_by),
+           (project_id, description, cost, currency, date, split_type, created_by_member_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?)""",
+        (project_id, description, cost, project["currency"], expense_date, split_type, created_by),
         return_id=True,
     )
 
@@ -422,11 +422,49 @@ def add_member(project_id):
     if not name:
         flash("Member name is required.", "error")
         return redirect(url_for("project", project_id=project_id))
-    db.execute(
+    recalculate = request.form.get("recalculate") == "on"
+
+    new_member_id = db.execute(
         "INSERT OR IGNORE INTO members (project_id, name) VALUES (?, ?)",
         (project_id, name),
+        return_id=True,
     )
-    flash("Member added.", "success")
+    if not new_member_id:
+        existing = db.query(
+            "SELECT id FROM members WHERE project_id = ? AND name = ?",
+            (project_id, name), one=True,
+        )
+        new_member_id = existing["id"] if existing else None
+
+    if recalculate and new_member_id:
+        expenses = db.query(
+            "SELECT id, cost FROM expenses WHERE project_id = ? AND split_type = 'equal'",
+            (project_id,),
+        )
+        for e in expenses:
+            shares = db.query(
+                "SELECT id, member_id, paid_share, owed_share FROM shares WHERE expense_id = ? AND owed_share > 0",
+                (e["id"],),
+            )
+            n_current = len(shares)
+            if n_current == 0:
+                continue
+            n_new = n_current + 1
+            per_person = round_cents(e["cost"] / n_new)
+            remainder = round_cents(e["cost"] - per_person * n_new)
+            for idx, s in enumerate(shares):
+                owed = per_person + (remainder if idx == 0 else 0)
+                db.execute(
+                    "UPDATE shares SET owed_share = ? WHERE id = ?",
+                    (owed, s["id"]),
+                )
+            db.execute(
+                "INSERT INTO shares (expense_id, member_id, paid_share, owed_share) VALUES (?, ?, 0, ?)",
+                (e["id"], new_member_id, per_person),
+            )
+        flash(f"{name} added and included in all {len(expenses)} equal-split expenses.", "success")
+    else:
+        flash(f"{name} added. They'll be included in future expenses.", "success")
     return redirect(url_for("project", project_id=project_id))
 
 
