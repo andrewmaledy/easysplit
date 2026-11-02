@@ -4,22 +4,30 @@
 {% block content %}
 <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px;">
     <h1>{{ project.name }}</h1>
-    <span class="pill">{{ project.currency }}</span>
-    <form method="POST" action="{{ url_for('toggle_simplify', project_id=project.id) }}">
+    <span class="pill hide-mobile">{{ project.currency }}</span>
+    <form method="POST" action="{{ url_for('toggle_simplify', project_id=project.id) }}" class="hide-mobile">
         <button type="submit" class="pill {{ 'green' if project.simplify_by_default else '' }}" style="cursor:pointer;border:none;font-family:inherit;font-size:0.8125rem;font-weight:500;">
             Simplify debts: {{ 'On' if project.simplify_by_default else 'Off' }}
         </button>
     </form>
-    <button type="button" class="pill" style="cursor:pointer;border:1px solid var(--border);font-family:inherit;font-size:0.8125rem;font-weight:500;background:var(--surface);" onclick="openTripSettings()">&#9881; Trip Settings</button>
+    <button type="button" class="pill hide-mobile" style="cursor:pointer;border:1px solid var(--border);font-family:inherit;font-size:0.8125rem;font-weight:500;background:var(--surface);" onclick="openTripSettings()">&#9881; Trip Settings</button>
 </div>
-<p style="color:var(--text-dim);font-size:0.875rem;margin-bottom:24px;">Share the trip password with anyone you want to add expenses.</p>
+<p class="hide-mobile" style="color:var(--text-dim);font-size:0.875rem;margin-bottom:24px;">Share the trip password with anyone you want to add expenses.</p>
+
+<div class="mobile-tabs">
+    <div class="mobile-tab active" onclick="mobileTab('expenses')">Expenses</div>
+    <div class="mobile-tab" onclick="mobileTab('add')">+ Add</div>
+    <div class="mobile-tab" onclick="mobileTab('balances')">Balances</div>
+    <div class="mobile-tab" onclick="mobileTab('settle')">Settle</div>
+    <div class="mobile-tab" onclick="mobileTab('members')">Members</div>
+</div>
 
 <div class="dashboard-grid">
     <!-- Settle Up -->
     <div class="section tile-settle">
         <div class="section-header">
             <h2>Settle Up</h2>
-            <button class="btn-secondary btn-sm" id="show-math-btn">Show me the math</button>
+            <button class="btn-secondary btn-sm hide-mobile" id="show-math-btn">Show me the math</button>
         </div>
         {% if project.simplify_by_default %}
             {% if simplified %}
@@ -245,33 +253,33 @@
     </div>
 
     <!-- Expenses -->
-    <div class="section tile-expenses">
+    <div class="section tile-expenses mobile-active">
         <div class="section-header"><h2>Expenses</h2></div>
         {% if expenses %}
         <div class="card" style="padding:0;overflow:hidden;">
             <table>
                 <thead>
                     <tr>
-                        <th>Date</th>
+                        <th class="hide-mobile">Date</th>
                         <th>Description</th>
-                        <th>By</th>
+                        <th class="hide-mobile">By</th>
                         <th class="right">Cost</th>
-                        <th>Split</th>
+                        <th class="hide-mobile">Split</th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody>
                 {% for e in expenses %}
                     <tr{% if e.is_payment %} class="payment-row"{% endif %}>
-                        <td style="color:var(--text-dim);font-size:0.875rem;white-space:nowrap;">{{ e.date|fmtdate }}</td>
+                        <td class="hide-mobile" style="color:var(--text-dim);font-size:0.875rem;white-space:nowrap;">{{ e.date|fmtdate }}</td>
                         <td style="font-weight:500;">
                             {{ e.description }}
                             {% if e.is_payment %}<span class="pill green" style="margin-left:6px;font-size:0.7rem;padding:1px 8px;">Payment</span>{% endif %}
                             {% if e.details %}<div style="font-size:0.75rem;color:var(--text-dim);font-weight:400;margin-top:2px;">{{ e.details }}</div>{% endif %}
                         </td>
-                        <td style="color:var(--text-dim);">{{ e.created_by_name or '—' }}</td>
+                        <td class="hide-mobile" style="color:var(--text-dim);">{{ e.created_by_name or '—' }}</td>
                         <td class="right" style="font-weight:600;">{{ project.currency }} {{ e.cost|money }}</td>
-                        <td>
+                        <td class="hide-mobile">
                             <div class="pie-cell">
                                 <div class="pie-icon" style="background: conic-gradient({% for seg in e.pie %}{% if not loop.first %}, {% endif %}#{{ seg.color }} {{ seg.start }}% {{ seg.end }}%{% endfor %});"
                                      data-pie='{{ e.pie | tojson }}'
@@ -305,9 +313,20 @@
     <div class="section tile-members">
         <div class="section-header">
             <h2>Members</h2>
-            <button class="btn-secondary btn-sm" onclick="openAddMember()">+ Add Member</button>
+            <div style="display:flex;gap:8px;">
+                <button class="btn-secondary btn-sm hide-mobile" onclick="openTripSettings()">&#9881; Settings</button>
+                <button class="btn-secondary btn-sm" onclick="openAddMember()">+ Add Member</button>
+            </div>
         </div>
         <div class="card">
+            <div class="mobile-only" style="display:none;margin-bottom:12px;">
+                <form method="POST" action="{{ url_for('toggle_simplify', project_id=project.id) }}" style="display:inline;">
+                    <button type="submit" class="pill {{ 'green' if project.simplify_by_default else '' }}" style="cursor:pointer;border:1px solid var(--border);font-family:inherit;font-size:0.8125rem;font-weight:500;background:var(--surface);">
+                        Simplify: {{ 'On' if project.simplify_by_default else 'Off' }}
+                    </button>
+                </form>
+                <button type="button" class="pill" style="margin-left:8px;cursor:pointer;border:1px solid var(--border);font-family:inherit;font-size:0.8125rem;font-weight:500;background:var(--surface);color:var(--accent);" onclick="openTripSettings()">&#9881; Trip Settings</button>
+            </div>
             <div class="members-list">
                 {% set shown = [] %}
                 {% for m in members %}
@@ -857,6 +876,19 @@ function syncPartner(cb) {
     if (!pid) return;
     const partner = document.querySelector(`input[name="involved_members"][value="${pid}"]`);
     if (partner) partner.checked = cb.checked;
+}
+
+function mobileTab(tab) {
+    document.querySelectorAll('.mobile-tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    const tiles = ['add-expense', 'expenses', 'balances', 'settle', 'members'];
+    const map = { 'add': 'add-expense', 'expenses': 'expenses', 'balances': 'balances', 'settle': 'settle', 'members': 'members' };
+    const target = map[tab];
+    tiles.forEach(t => {
+        document.querySelector('.tile-' + t).classList.remove('mobile-active');
+    });
+    if (target) document.querySelector('.tile-' + target).classList.add('mobile-active');
+    window.scrollTo(0, 0);
 }
 
 // Also update summary when cost changes

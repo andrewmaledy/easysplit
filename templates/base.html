@@ -109,7 +109,47 @@
                     "members";
                 gap: 0;
             }
+            .mobile-tabs { display: flex; }
+            .tile-add-expense, .tile-expenses, .tile-balances, .tile-settle, .tile-members {
+                display: none;
+            }
+            .tile-add-expense.mobile-active,
+            .tile-expenses.mobile-active,
+            .tile-balances.mobile-active,
+            .tile-settle.mobile-active,
+            .tile-members.mobile-active { display: block; }
+            .container { padding: 16px 14px 80px; }
+            .nav { padding: 10px 14px; }
+            h1 { font-size: 1.3rem; }
+            .section { margin-bottom: 20px; }
+            .card { padding: 14px; }
+            .modal-overlay { padding: 0; }
+            .modal { border-radius: 0; min-height: 100vh; max-width: 100%; }
+            .modal-body { max-height: calc(100vh - 60px); }
+            .hide-mobile { display: none !important; }
+            .mobile-only { display: flex !important; }
+            table th.hide-mobile, table td.hide-mobile { display: none; }
+            .balance-bar .name { min-width: 70px; font-size: 0.8125rem; }
+            .balance-bar .amt { min-width: 70px; font-size: 0.8125rem; }
+            .balance-bar .bar-track { display: none; }
+            .members-list { gap: 6px; }
+            .member-chip { padding: 4px 10px; font-size: 0.8125rem; }
+            .debt-card { padding: 10px 12px; gap: 8px; }
+            .debt-card .amt { font-size: 0.9375rem; }
+            .share-grid { grid-template-columns: 1fr 90px 90px; gap: 6px; }
+            .expense-actions { gap: 4px; }
         }
+
+        .mobile-tabs { display: none; position: sticky; top: 50px; z-index: 99;
+            background: var(--surface); border-bottom: 1px solid var(--border);
+            padding: 8px 14px; gap: 6px; }
+        .mobile-tab {
+            flex: 1; padding: 8px 0; text-align: center;
+            background: var(--surface-2); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); font-size: 0.8125rem; font-weight: 600;
+            color: var(--text-dim); cursor: pointer; font-family: inherit;
+        }
+        .mobile-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
         h1 { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 4px; }
         h2 { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 16px; }
