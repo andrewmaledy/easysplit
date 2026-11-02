@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup 8 — Clean Compact</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #f7f8fa; color: #111827; line-height: 1.5; }
+  .nav { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+  .nav-brand { font-weight: 800; font-size: 1rem; letter-spacing: -0.02em; display: flex; align-items: center; gap: 7px; }
+  .nav-brand .dot { width: 9px; height: 9px; border-radius: 50%; background: #4f46e5; }
+  .nav-leave { font-size: 0.8125rem; color: #6b7280; text-decoration: none; }
+  .container { max-width: 760px; margin: 0 auto; padding: 22px 16px 60px; }
+  .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  h1 { font-size: 1.375rem; font-weight: 800; letter-spacing: -0.03em; }
+  .pills { display: flex; gap: 6px; }
+  .pill { background: #fff; border: 1px solid #e5e7eb; border-radius: 7px; padding: 3px 11px; font-size: 0.6875rem; font-weight: 600; color: #6b7280; }
+  .pill.on { background: #eef2ff; border-color: #c7d2fe; color: #4f46e5; }
+  .sub { color: #9ca3af; font-size: 0.75rem; margin-bottom: 18px; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+  .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; }
+  .card-title { font-size: 0.6875rem; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+
+  .bal-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; }
+  .bal-row:not(:last-child) { border-bottom: 1px solid #f3f4f6; }
+  .bal-left { display: flex; align-items: center; gap: 8px; }
+  .bal-av { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.6875rem; color: #fff; }
+  .bal-name { font-size: 0.8125rem; font-weight: 600; }
+  .bal-amt { font-size: 0.8125rem; font-weight: 700; }
+  .pos { color: #059669; }
+  .neg { color: #dc2626; }
+
+  .debt-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; }
+  .debt-row:not(:last-child) { border-bottom: 1px solid #f3f4f6; }
+  .debt-who { font-size: 0.8125rem; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+  .debt-who .arrow { color: #9ca3af; font-size: 0.75rem; }
+  .debt-right { display: flex; align-items: center; gap: 8px; }
+  .debt-amt { font-weight: 700; font-size: 0.8125rem; color: #111827; }
+  .debt-btn { background: #4f46e5; border: none; color: #fff; padding: 5px 14px; border-radius: 7px; font-size: 0.6875rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .debt-btn:hover { background: #4338ca; }
+
+  .add-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .add-row input { flex: 1; background: #f7f8fa; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 12px; font-size: 0.8125rem; font-family: inherit; color: #111827; }
+  .add-row input:focus { outline: none; border-color: #4f46e5; }
+  .add-btn { background: #4f46e5; color: #fff; border: none; padding: 10px; border-radius: 8px; font-size: 0.8125rem; font-weight: 700; cursor: pointer; font-family: inherit; width: 100%; }
+  .add-btn:hover { background: #4338ca; }
+
+  .exp-item { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f3f4f6; }
+  .exp-item:last-child { border-bottom: none; }
+  .exp-av { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; color: #fff; flex-shrink: 0; margin-right: 10px; }
+  .exp-info { flex: 1; }
+  .exp-desc { font-weight: 600; font-size: 0.8125rem; }
+  .exp-meta { font-size: 0.6875rem; color: #9ca3af; }
+  .exp-amt { font-weight: 700; font-size: 0.875rem; margin-right: 8px; }
+  .exp-btn { background: none; border: 1px solid #e5e7eb; padding: 3px 10px; border-radius: 6px; font-size: 0.625rem; font-weight: 600; cursor: pointer; font-family: inherit; color: #6b7280; }
+  .exp-btn:hover { border-color: #4f46e5; color: #4f46e5; }
+
+  .members { display: flex; flex-wrap: wrap; gap: 6px; }
+  .member { display: flex; align-items: center; gap: 5px; background: #fff; border: 1px solid #e5e7eb; border-radius: 999px; padding: 4px 12px 4px 4px; font-size: 0.75rem; font-weight: 600; }
+  .member .av { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.5625rem; font-weight: 700; color: #fff; }
+  .member-group { display: inline-flex; align-items: center; gap: 3px; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 999px; padding: 2px 4px 2px 2px; }
+  .member-group .label { font-size: 0.5625rem; color: #4f46e5; font-weight: 600; padding: 0 2px; }
+
+  .full { grid-column: 1 / -1; }
+</style>
+</head>
+<body>
+<div class="nav">
+  <span class="nav-brand"><span class="dot"></span> EasySplit</span>
+  <a href="#" class="nav-leave">Log Out</a>
+</div>
+<div class="container">
+  <div class="header-row">
+    <h1>Vegas 2026</h1>
+    <div class="pills">
+      <span class="pill">CAD</span>
+      <span class="pill on">Simplify</span>
+    </div>
+  </div>
+  <p class="sub">Share the trip password with anyone you want to add expenses.</p>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-title">Balances</div>
+      <div class="bal-row">
+        <div class="bal-left">
+          <div class="bal-av" style="background:#4f46e5;">A</div>
+          <span class="bal-name">Alice</span>
+        </div>
+        <span class="bal-amt pos">+CAD 210</span>
+      </div>
+      <div class="bal-row">
+        <div class="bal-left">
+          <div class="bal-av" style="background:#0ea5e9;">B</div>
+          <span class="bal-name">Bob</span>
+        </div>
+        <span class="bal-amt neg">-CAD 60</span>
+      </div>
+      <div class="bal-row">
+        <div class="bal-left">
+          <div class="bal-av" style="background:#10b981;">C</div>
+          <span class="bal-name">Charlie</span>
+        </div>
+        <span class="bal-amt neg">-CAD 150</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Settle Up</div>
+      <div class="debt-row">
+        <div class="debt-who"><div class="bal-av" style="width:24px;height:24px;font-size:0.5625rem;background:#0ea5e9;">B</div> Bob <span class="arrow">pays Alice</span></div>
+        <div class="debt-right">
+          <span class="debt-amt">CAD 60</span>
+          <button class="debt-btn">Settle</button>
+        </div>
+      </div>
+      <div class="debt-row">
+        <div class="debt-who"><div class="bal-av" style="width:24px;height:24px;font-size:0.5625rem;background:#10b981;">C</div> Charlie <span class="arrow">pays Alice</span></div>
+        <div class="debt-right">
+          <span class="debt-amt">CAD 150</span>
+          <button class="debt-btn">Settle</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card full">
+      <div class="card-title">Add Expense</div>
+      <div class="add-row">
+        <input type="text" placeholder="Dinner, gas, groceries..." style="flex:2;">
+        <input type="number" placeholder="0.00" style="flex:1;">
+        <input type="date" style="flex:1;">
+      </div>
+      <button class="add-btn">Add Expense</button>
+    </div>
+
+    <div class="card full">
+      <div class="card-title">Expenses</div>
+      <div class="exp-item">
+        <div class="exp-av" style="background:#4f46e5;">A</div>
+        <div class="exp-info">
+          <div class="exp-desc">Dinner at Lavo</div>
+          <div class="exp-meta">Alice paid · Jan 15, 2026</div>
+        </div>
+        <span class="exp-amt">CAD 180.00</span>
+        <button class="exp-btn">Edit</button>
+      </div>
+      <div class="exp-item">
+        <div class="exp-av" style="background:#0ea5e9;">B</div>
+        <div class="exp-info">
+          <div class="exp-desc">Uber to strip</div>
+          <div class="exp-meta">Bob paid · Jan 15, 2026</div>
+        </div>
+        <span class="exp-amt">CAD 28.50</span>
+        <button class="exp-btn">Edit</button>
+      </div>
+      <div class="exp-item">
+        <div class="exp-av" style="background:#10b981;">C</div>
+        <div class="exp-info">
+          <div class="exp-desc">Pool cabana</div>
+          <div class="exp-meta">Charlie paid · Jan 16, 2026</div>
+        </div>
+        <span class="exp-amt">CAD 320.00</span>
+        <button class="exp-btn">Edit</button>
+      </div>
+    </div>
+
+    <div class="card full">
+      <div class="card-title">Members</div>
+      <div class="members">
+        <span class="member"><span class="av" style="background:#4f46e5;">A</span> Alice</span>
+        <span class="member-group">
+          <span class="member" style="border:none;background:none;"><span class="av" style="background:#0ea5e9;">B</span> Bob</span>
+          <span class="label">grouped</span>
+          <span class="member" style="border:none;background:none;"><span class="av" style="background:#f43f5e;">D</span> Dana</span>
+        </span>
+        <span class="member"><span class="av" style="background:#10b981;">C</span> Charlie</span>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
