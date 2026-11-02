@@ -240,6 +240,9 @@ def project(project_id):
 
     balances = compute_balances(project_id)
     simplified = simplify_debts(balances) if project["simplify_by_default"] else []
+    max_bal = max((b["net"] for b in balances), default=0)
+    min_bal = min((b["net"] for b in balances), default=0)
+    max_abs = max(abs(max_bal), abs(min_bal), 0.01)
 
     return render_template(
         "project.html",
@@ -249,6 +252,7 @@ def project(project_id):
         balances=balances,
         simplified=simplified,
         today=date.today().isoformat(),
+        max_abs=max_abs,
     )
 
 

@@ -2,205 +2,215 @@
 {% block title %}{{ project.name }} — EasySplit{% endblock %}
 
 {% block content %}
-<h1>{{ project.name }}
-    <span class="tag">ID: {{ project.id }}</span>
-    <span class="tag">{{ project.currency }}</span>
-    {% if project.simplify_by_default %}<span class="tag">Simplify debts on</span>{% endif %}
-</h1>
-<p style="color:#666;">Share the trip password with anyone you want to add expenses.</p>
+<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px;">
+    <h1>{{ project.name }}</h1>
+    <span class="pill">{{ project.currency }}</span>
+    {% if project.simplify_by_default %}<span class="pill green">Simplify debts</span>{% endif %}
+</div>
+<p style="color:var(--text-dim);font-size:0.875rem;margin-bottom:28px;">Share the trip password with anyone you want to add expenses.</p>
 
 <!-- Simplified Debts -->
-<h2>Simplified Debts</h2>
-{% if project.simplify_by_default %}
-    {% if simplified %}
+<div class="section">
+    <div class="section-header"><h2>Settle Up</h2></div>
+    {% if project.simplify_by_default %}
+        {% if simplified %}
+        <div class="card" style="padding:16px;">
+            {% for t in simplified %}
+            <div class="debt-card">
+                <div class="avatar">{{ t.from[0]|upper }}</div>
+                <div>
+                    <div class="who">{{ t.from }}</div>
+                    <div class="arrow">pays {{ t.to }}</div>
+                </div>
+                <div class="amt">{{ project.currency }} {{ t.amount|money }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card empty-state">
+            <div class="icon">&#10003;</div>
+            <p style="font-weight:500;">Everyone's settled up!</p>
+        </div>
+        {% endif %}
+    {% else %}
+    <div class="card empty-state"><p>Simplify debts is off for this trip.</p></div>
+    {% endif %}
+</div>
+
+<!-- Balances -->
+<div class="section">
+    <div class="section-header"><h2>Balances</h2></div>
     <div class="card">
-        {% for t in simplified %}
-        <div class="debt-item">
-            <strong>{{ t.from }}</strong>
-            <span class="arrow">pays</span>
-            <strong>{{ t.to }}</strong>
-            <span style="flex:1"></span>
-            <span class="amount">{{ project.currency }} {{ t.amount|money }}</span>
+        {% for b in balances %}
+        <div class="balance-bar">
+            <div class="name">{{ b.name }}</div>
+            <div class="bar-track">
+                {% if b.net > 0.01 %}
+                <div class="bar-fill pos" style="width: {{ (b.net / max_abs * 50)|round(1) }}%;"></div>
+                {% elif b.net < -0.01 %}
+                <div class="bar-fill neg" style="width: {{ (b.net / max_abs * 50 * -1)|round(1) }}%;"></div>
+                {% endif %}
+            </div>
+            <div class="amt
+                {% if b.net > 0.01 %}pos
+                {% elif b.net < -0.01 %}neg
+                {% else %}neutral{% endif %}">
+                {% if b.net > 0.01 %}+{% endif %}{{ project.currency }} {{ b.net|money }}
+            </div>
         </div>
         {% endfor %}
     </div>
-    {% else %}
-    <p class="empty">Everyone is settled up — no payments needed!</p>
-    {% endif %}
-{% else %}
-    <p class="empty">Simplify debts is off for this project.</p>
-{% endif %}
-
-<!-- Balances -->
-<h2>Balances</h2>
-<div class="card">
-    <table>
-        <thead>
-            <tr>
-                <th>Member</th>
-                <th class="right">Paid</th>
-                <th class="right">Owes</th>
-                <th class="right">Net Balance</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for b in balances %}
-            <tr>
-                <td>{{ b.name }}</td>
-                <td class="right">{{ project.currency }} {{ b.paid|money }}</td>
-                <td class="right">{{ project.currency }} {{ b.owed|money }}</td>
-                <td class="right
-                    {% if b.net > 0.01 %}positive
-                    {% elif b.net < -0.01 %}negative
-                    {% else %}zero{% endif %}">
-                    {% if b.net > 0.01 %}+{% endif %}{{ project.currency }} {{ b.net|money }}
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
 </div>
 
 <!-- Add Expense -->
-<h2>Add Expense</h2>
-<div class="card">
-    <form method="POST" action="{{ url_for('add_expense', project_id=project.id) }}" id="expense-form">
-        <div class="row">
+<div class="section">
+    <div class="section-header"><h2>Add Expense</h2></div>
+    <div class="card">
+        <form method="POST" action="{{ url_for('add_expense', project_id=project.id) }}" id="expense-form">
+            <div class="row">
+                <div class="field" style="flex:2;">
+                    <label for="description">What was it for?</label>
+                    <input type="text" id="description" name="description" required placeholder="Dinner, gas, groceries...">
+                </div>
+                <div class="field" style="max-width:130px;flex:0;">
+                    <label for="cost">Cost</label>
+                    <input type="number" id="cost" name="cost" step="0.01" min="0.01" required placeholder="0.00">
+                </div>
+                <div class="field" style="max-width:150px;flex:0;">
+                    <label for="date">Date</label>
+                    <input type="date" id="date" name="date" value="{{ today }}">
+                </div>
+            </div>
+            <div class="row">
+                <div class="field" style="flex:1;">
+                    <label for="created_by_member_id">Entered by</label>
+                    <select id="created_by_member_id" name="created_by_member_id">
+                        {% for m in members %}
+                        <option value="{{ m.id }}">{{ m.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field" style="flex:1;">
+                    <label for="payer_id">Paid by</label>
+                    <select id="payer_id" name="payer_id">
+                        {% for m in members %}
+                        <option value="{{ m.id }}">{{ m.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
             <div class="field">
-                <label for="description">Description</label>
-                <input type="text" id="description" name="description" required placeholder="e.g. Dinner">
+                <label>Split</label>
+                <div class="tabs">
+                    <div class="tab active" id="tab-equal" onclick="showSplit('equal')">Split Equally</div>
+                    <div class="tab" id="tab-custom" onclick="showSplit('custom')">Custom</div>
+                </div>
+                <input type="hidden" name="split_type" id="split_type" value="equal">
             </div>
-            <div class="field" style="max-width:150px;">
-                <label for="cost">Cost ({{ project.currency }})</label>
-                <input type="number" id="cost" name="cost" step="0.01" min="0.01" required>
-            </div>
-            <div class="field" style="max-width:170px;">
-                <label for="date">Date</label>
-                <input type="date" id="date" name="date" value="{{ today }}">
-            </div>
-        </div>
-        <div class="row">
-            <div class="field" style="max-width:250px;">
-                <label for="created_by_member_id">Entered by</label>
-                <select id="created_by_member_id" name="created_by_member_id">
-                    {% for m in members %}
-                    <option value="{{ m.id }}">{{ m.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="field" style="max-width:250px;">
-                <label for="payer_id">Paid by</label>
-                <select id="payer_id" name="payer_id">
-                    {% for m in members %}
-                    <option value="{{ m.id }}">{{ m.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-        </div>
-        <div class="field">
-            <label>Split Type</label>
-            <div class="tabs">
-                <div class="tab active" id="tab-equal" onclick="showSplit('equal')">Split Equally</div>
-                <div class="tab" id="tab-custom" onclick="showSplit('custom')">Custom Split</div>
-            </div>
-            <input type="hidden" name="split_type" id="split_type" value="equal">
-        </div>
 
-        <!-- Equal split: choose who's involved -->
-        <div class="field" id="equal-split">
-            <label>Split among</label>
-            <div class="checkbox-group">
+            <div id="equal-split">
+                <label>Split among</label>
+                <div class="check-row">
+                    {% for m in members %}
+                    <label>
+                        <input type="checkbox" name="involved_members" value="{{ m.id }}" checked>
+                        {{ m.name }}
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div id="custom-split" style="display:none;">
+                <div class="share-grid">
+                    <div class="hdr">Member</div>
+                    <div class="hdr">Paid</div>
+                    <div class="hdr">Owes</div>
+                </div>
                 {% for m in members %}
-                <label>
-                    <input type="checkbox" name="involved_members" value="{{ m.id }}" checked>
-                    {{ m.name }}
-                </label>
+                <div class="share-grid">
+                    <div style="font-weight:500;">{{ m.name }}</div>
+                    <input type="number" name="paid_{{ m.id }}" step="0.01" value="0" min="0">
+                    <input type="number" name="owed_{{ m.id }}" step="0.01" value="0" min="0">
+                </div>
                 {% endfor %}
+                <p class="hint">Sum of "Paid" and sum of "Owes" must each equal the total cost.</p>
             </div>
-        </div>
 
-        <!-- Custom split: per member paid/owed -->
-        <div class="field" id="custom-split" style="display:none;">
-            <label>Per-member amounts</label>
-            <div class="share-grid">
-                <div class="hdr">Member</div>
-                <div class="hdr">Paid</div>
-                <div class="hdr">Owes</div>
+            <div style="margin-top:20px;">
+                <button type="submit" style="width:100%;">Add Expense</button>
             </div>
-            {% for m in members %}
-            <div class="share-grid">
-                <div>{{ m.name }}</div>
-                <input type="number" name="paid_{{ m.id }}" step="0.01" value="0" min="0">
-                <input type="number" name="owed_{{ m.id }}" step="0.01" value="0" min="0">
-            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Expenses -->
+<div class="section">
+    <div class="section-header"><h2>Expenses</h2></div>
+    {% if expenses %}
+    <div class="card" style="padding:0;overflow:hidden;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>By</th>
+                    <th class="right">Cost</th>
+                    <th>Split</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for e in expenses %}
+                <tr>
+                    <td style="color:var(--text-dim);font-size:0.875rem;white-space:nowrap;">{{ e.date }}</td>
+                    <td style="font-weight:500;">{{ e.description }}</td>
+                    <td style="color:var(--text-dim);">{{ e.created_by_name or '—' }}</td>
+                    <td class="right" style="font-weight:600;">{{ project.currency }} {{ e.cost|money }}</td>
+                    <td>
+                        <div class="expense-split-tags">
+                        {% for s in e.shares %}
+                            {% if s.owed_share > 0 %}
+                            <span class="tag">{{ s.member_name }} {{ project.currency }}{{ s.owed_share|money }}</span>
+                            {% endif %}
+                        {% endfor %}
+                        </div>
+                    </td>
+                    <td>
+                        <form method="POST" action="{{ url_for('delete_expense', project_id=project.id, expense_id=e.id) }}"
+                              style="display:inline;"
+                              onsubmit="return confirm('Delete this expense?');">
+                            <button type="submit" class="btn-danger btn-sm">Delete</button>
+                        </form>
+                    </td>
+                </tr>
             {% endfor %}
-            <p style="font-size:0.85em;color:#666;margin-top:6px;">Sum of "Paid" and sum of "Owes" must each equal the total cost.</p>
-        </div>
-
-        <button type="submit">Add Expense</button>
-    </form>
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card empty-state">
+        <div class="icon">&#128178;</div>
+        <p>No expenses yet. Add one above!</p>
+    </div>
+    {% endif %}
 </div>
 
-<!-- Expenses List -->
-<h2>Expenses</h2>
-{% if expenses %}
-<div class="card">
-    <table>
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Description</th>
-                <th>Entered by</th>
-                <th class="right">Cost</th>
-                <th>Split</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for e in expenses %}
-            <tr>
-                <td>{{ e.date }}</td>
-                <td>{{ e.description }}</td>
-                <td>{{ e.created_by_name or '—' }}</td>
-                <td class="right">{{ project.currency }} {{ e.cost|money }}</td>
-                <td>
-                    {% for s in e.shares %}
-                        {% if s.owed_share > 0 %}
-                            <span class="tag">{{ s.member_name }}: {{ project.currency }} {{ s.owed_share|money }}</span>
-                        {% endif %}
-                    {% endfor %}
-                </td>
-                <td>
-                    <form method="POST" action="{{ url_for('delete_expense', project_id=project.id, expense_id=e.id) }}"
-                          style="display:inline;"
-                          onsubmit="return confirm('Delete this expense?');">
-                        <button type="submit" class="btn-danger btn-sm">Delete</button>
-                    </form>
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-</div>
-{% else %}
-<p class="empty">No expenses yet. Add one above!</p>
-{% endif %}
-
-<!-- Add Member -->
-<h2>Members</h2>
-<div class="card">
-    <p style="margin-bottom:10px;">
-        {% for m in members %}
-            <span class="tag" style="font-size:1em;">{{ m.name }}</span>
-        {% endfor %}
-    </p>
-    <form method="POST" action="{{ url_for('add_member', project_id=project.id) }}" style="display:flex;gap:10px;align-items:end;">
-        <div class="field" style="flex:1;margin-bottom:0;">
-            <label for="member_name">Add a member</label>
-            <input type="text" id="member_name" name="name" placeholder="New member name">
+<!-- Members -->
+<div class="section">
+    <div class="section-header"><h2>Members</h2></div>
+    <div class="card">
+        <div class="members-list">
+            {% for m in members %}
+            <span class="member-chip"><span class="av">{{ m.name[0]|upper }}</span>{{ m.name }}</span>
+            {% endfor %}
         </div>
-        <button type="submit">Add Member</button>
-    </form>
+        <form method="POST" action="{{ url_for('add_member', project_id=project.id) }}" class="add-member-row">
+            <div class="field">
+                <input type="text" name="name" placeholder="Add a member...">
+            </div>
+            <button type="submit" class="btn-secondary">Add</button>
+        </form>
+    </div>
 </div>
 {% endblock %}
 

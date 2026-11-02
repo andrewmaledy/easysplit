@@ -1,52 +1,59 @@
 {% extends "base.html" %}
-{% block title %}EasySplit — Create or Join a Trip{% endblock %}
+{% block title %}EasySplit{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h2>Enter Trip Password</h2>
-    <p style="color:#666;margin-bottom:14px;">Have a trip password? Enter it to access the trip.</p>
-    <form method="POST" action="{{ url_for('join_project') }}">
-        <div class="field" style="max-width:300px;">
-            <label for="password">Trip Password</label>
-            <input type="password" id="password" name="password" required>
-        </div>
-        <button type="submit">Enter Trip</button>
-    </form>
+<div class="hero">
+    <h1>Split expenses, the easy way.</h1>
+    <p>Create a trip, set a password, share it with your group. Add expenses as you go and see exactly who owes what.</p>
 </div>
 
-<div class="card">
-    <h2>Create a Trip</h2>
-    <p style="color:#666;margin-bottom:14px;">Create a new trip, add members, and set a password. Share the password with anyone you want to add expenses.</p>
-    <form method="POST" action="{{ url_for('create_project') }}">
-        <div class="row">
+<div class="split-cards">
+    <div class="card">
+        <h2>Enter a Trip</h2>
+        <p style="color:var(--text-dim);font-size:0.875rem;margin-bottom:20px;">Got a trip password? Enter it to jump in.</p>
+        <form method="POST" action="{{ url_for('join_project') }}">
             <div class="field">
-                <label for="name">Trip Name</label>
-                <input type="text" id="name" name="name" required placeholder="e.g. Trip to Lisbon">
+                <label for="password">Trip Password</label>
+                <input type="password" id="password" name="password" required autofocus placeholder="Enter the password shared with you">
             </div>
-            <div class="field" style="max-width:120px;">
-                <label for="currency">Currency</label>
-                <input type="text" id="currency" name="currency" value="USD" maxlength="3">
+            <button type="submit" style="width:100%;">Enter Trip</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Create a Trip</h2>
+        <p style="color:var(--text-dim);font-size:0.875rem;margin-bottom:20px;">Start a new trip and invite people with the password.</p>
+        <form method="POST" action="{{ url_for('create_project') }}">
+            <div class="row">
+                <div class="field" style="flex:2;">
+                    <label for="name">Trip Name</label>
+                    <input type="text" id="name" name="name" required placeholder="Weekend in Lisbon">
+                </div>
+                <div class="field" style="max-width:90px;flex:0;">
+                    <label for="currency">Currency</label>
+                    <input type="text" id="currency" name="currency" value="USD" maxlength="3">
+                </div>
             </div>
-        </div>
-        <div class="field">
-            <label for="password">Trip Password</label>
-            <input type="password" id="create_password" name="password" required placeholder="Anyone with this password can access the trip">
-        </div>
-        <div class="field">
-            <label>Members (add at least one — include yourself)</label>
-            <div id="member-fields">
-                <input type="text" name="members" placeholder="Member 1" style="margin-bottom:6px;">
+            <div class="field">
+                <label for="create_password">Trip Password</label>
+                <input type="password" id="create_password" name="password" required placeholder="Set a password to share">
             </div>
-            <button type="button" class="btn-sm" style="background:var(--gray);color:var(--text);border:1px solid var(--border);margin-top:6px;" onclick="addMemberField()">+ Add another member</button>
-        </div>
-        <div class="field checkbox-group">
-            <label>
-                <input type="checkbox" name="simplify_by_default" checked>
-                Simplify debts (minimize number of payments needed to settle up)
-            </label>
-        </div>
-        <button type="submit">Create Trip</button>
-    </form>
+            <div class="field">
+                <label>Members</label>
+                <div class="member-input-list" id="member-fields">
+                    <input type="text" name="members" placeholder="Your name">
+                </div>
+                <button type="button" class="add-member-btn" onclick="addMemberField()">+ Add member</button>
+            </div>
+            <div class="field">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--text);font-size:0.875rem;">
+                    <input type="checkbox" name="simplify_by_default" checked style="width:16px;height:16px;accent-color:var(--accent);">
+                    Simplify debts — minimize the number of payments to settle up
+                </label>
+            </div>
+            <button type="submit" style="width:100%;">Create Trip</button>
+        </form>
+    </div>
 </div>
 {% endblock %}
 
@@ -59,7 +66,6 @@ function addMemberField() {
     input.type = 'text';
     input.name = 'members';
     input.placeholder = 'Member ' + (count + 1);
-    input.style.marginBottom = '6px;';
     container.appendChild(input);
     input.focus();
 }

@@ -166,7 +166,7 @@ def run():
         sess.pop("project_id", None)
     resp = client.get("/projects/1", follow_redirects=True)
     assert resp.status_code == 200
-    assert b"Enter Trip Password" in resp.data, "should redirect to home page, not 403"
+    assert b"Enter a Trip" in resp.data, "should redirect to home page, not 403"
     print("PASS: unauthenticated project URL redirects home (no 403)")
 
     print("\n✅ All tests passed!")
