@@ -1,4 +1,4 @@
-import { html } from 'hono/html'
+import { html, raw } from 'hono/html'
 import { STYLES } from './styles'
 import { fmtMoney, fmtDate, type Project, type Member, type Balance } from './lib'
 
@@ -14,7 +14,7 @@ export function layout(title: string, sessionId: string | null, flashMsgs: {cat:
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>${STYLES}</style>
+  <style>${raw(STYLES)}</style>
 </head>
 <body>
   <div class="nav">
@@ -185,7 +185,7 @@ export function projectPage(
     <script>
     const projectId = ${project.id};
     const membersData = ${JSON.stringify(membersJson)};
-    ${PROJECT_JS}
+    ${raw(PROJECT_JS)}
     </script>
   `)
 }
