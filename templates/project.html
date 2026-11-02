@@ -5,7 +5,11 @@
 <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px;">
     <h1>{{ project.name }}</h1>
     <span class="pill">{{ project.currency }}</span>
-    {% if project.simplify_by_default %}<span class="pill green">Simplify debts</span>{% endif %}
+    <form method="POST" action="{{ url_for('toggle_simplify', project_id=project.id) }}">
+        <button type="submit" class="pill {{ 'green' if project.simplify_by_default else '' }}" style="cursor:pointer;border:none;font-family:inherit;font-size:0.8125rem;font-weight:500;">
+            Simplify debts: {{ 'On' if project.simplify_by_default else 'Off' }}
+        </button>
+    </form>
 </div>
 <p style="color:var(--text-dim);font-size:0.875rem;margin-bottom:28px;">Share the trip password with anyone you want to add expenses.</p>
 

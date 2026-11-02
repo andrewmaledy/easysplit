@@ -377,6 +377,16 @@ def add_member(project_id):
     return redirect(url_for("project", project_id=project_id))
 
 
+@app.route("/projects/<int:project_id>/toggle-simplify", methods=["POST"])
+def toggle_simplify(project_id):
+    if not require_project_access(project_id):
+        return redirect(url_for("home"))
+    project = get_project_or_404(project_id)
+    new_val = 0 if project["simplify_by_default"] else 1
+    db.execute("UPDATE projects SET simplify_by_default = ? WHERE id = ?", (new_val, project_id))
+    return redirect(url_for("project", project_id=project_id))
+
+
 @app.route("/projects/<int:project_id>/balances")
 def balances_json(project_id):
     if not require_project_access(project_id):
