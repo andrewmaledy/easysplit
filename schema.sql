@@ -1,0 +1,40 @@
+CREATE TABLE IF NOT EXISTS projects (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    currency TEXT NOT NULL DEFAULT 'USD',
+    simplify_by_default INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS members (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(project_id, name)
+);
+
+CREATE TABLE IF NOT EXISTS expenses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    description TEXT NOT NULL,
+    cost REAL NOT NULL,
+    currency TEXT NOT NULL DEFAULT 'USD',
+    date TEXT NOT NULL,
+    created_by_member_id INTEGER REFERENCES members(id),
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS shares (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    expense_id INTEGER NOT NULL REFERENCES expenses(id) ON DELETE CASCADE,
+    member_id INTEGER NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+    paid_share REAL NOT NULL DEFAULT 0,
+    owed_share REAL NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS idx_members_project ON members(project_id);
+CREATE INDEX IF NOT EXISTS idx_expenses_project ON expenses(project_id);
+CREATE INDEX IF NOT EXISTS idx_shares_expense ON shares(expense_id);
+CREATE INDEX IF NOT EXISTS idx_shares_member ON shares(member_id);
