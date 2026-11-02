@@ -15,7 +15,10 @@
 
 <!-- Simplified Debts -->
 <div class="section">
-    <div class="section-header"><h2>Settle Up</h2></div>
+    <div class="section-header">
+        <h2>Settle Up</h2>
+        <button class="btn-secondary btn-sm" id="show-math-btn">Show me the math</button>
+    </div>
     {% if project.simplify_by_default %}
         {% if simplified %}
         <div class="card" style="padding:16px;">
@@ -216,6 +219,34 @@
         </form>
     </div>
 </div>
+
+<!-- Math Modal -->
+<div id="math-modal" class="modal-overlay" style="display:none;">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Who Owes Who</h2>
+            <button class="modal-close" onclick="closeMath()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="tabs" style="margin-bottom:18px;">
+                <div class="tab active" id="math-tab-raw" onclick="switchMathTab('raw')">Without Simplify</div>
+                <div class="tab" id="math-tab-simplified" onclick="switchMathTab('simplified')">With Simplify</div>
+            </div>
+            <div id="math-raw" class="math-view">
+                <p class="math-subtitle">All individual debts, as they were recorded.</p>
+                <div id="math-raw-list"></div>
+                <div id="math-breakdown">
+                    <h3 style="font-size:0.9375rem;margin-top:24px;margin-bottom:12px;color:var(--text-dim);">Per-expense breakdown</h3>
+                    <div id="math-breakdown-list"></div>
+                </div>
+            </div>
+            <div id="math-simplified" class="math-view" style="display:none;">
+                <p class="math-subtitle">The same balances collapsed into the fewest possible payments.</p>
+                <div id="math-simplified-list"></div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block script %}
@@ -227,5 +258,89 @@ function showSplit(type) {
     document.getElementById('tab-equal').classList.toggle('active', type === 'equal');
     document.getElementById('tab-custom').classList.toggle('active', type === 'custom');
 }
+
+let mathData = null;
+const simplifyOn = {{ 'true' if project.simplify_by_default else 'false' }};
+
+document.getElementById('show-math-btn').addEventListener('click', async () => {
+    if (!mathData) {
+        const resp = await fetch('{{ url_for("math_json", project_id=project.id) }}');
+        mathData = await resp.json();
+    }
+    openMath();
+});
+
+function openMath() {
+    renderMath();
+    document.getElementById('math-modal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeMath() {
+    document.getElementById('math-modal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+function switchMathTab(tab) {
+    document.getElementById('math-tab-raw').classList.toggle('active', tab === 'raw');
+    document.getElementById('math-tab-simplified').classList.toggle('active', tab === 'simplified');
+    document.getElementById('math-raw').style.display = tab === 'raw' ? '' : 'none';
+    document.getElementById('math-simplified').style.display = tab === 'simplified' ? '' : 'none';
+}
+
+function renderMath() {
+    const cur = mathData.currency;
+
+    // Default tab: match current simplify setting
+    switchMathTab(simplifyOn ? 'simplified' : 'raw');
+
+    // Raw debts
+    const rawList = document.getElementById('math-raw-list');
+    if (mathData.raw_debts.length === 0) {
+        rawList.innerHTML = '<div class="empty-state"><p>No debts yet.</p></div>';
+    } else {
+        rawList.innerHTML = mathData.raw_debts.map(d => `
+            <div class="debt-card">
+                <div class="avatar">${d.from[0].toUpperCase()}</div>
+                <div><div class="who">${d.from}</div><div class="arrow">pays ${d.to}</div></div>
+                <div class="amt">${cur} ${d.amount.toFixed(2)}</div>
+            </div>
+        `).join('');
+    }
+
+    // Breakdown
+    const bdList = document.getElementById('math-breakdown-list');
+    if (mathData.breakdown.length === 0) {
+        bdList.innerHTML = '<p style="color:var(--text-dim);">No expenses to break down.</p>';
+    } else {
+        bdList.innerHTML = mathData.breakdown.map(e => `
+            <div class="breakdown-item">
+                <div class="breakdown-title">${e.description}</div>
+                ${e.debts.map(d => `<div class="breakdown-debt">${d.from} &rarr; ${d.to}: ${cur} ${d.amount.toFixed(2)}</div>`).join('')}
+            </div>
+        `).join('');
+    }
+
+    // Simplified debts
+    const simpList = document.getElementById('math-simplified-list');
+    if (mathData.simplified_debts.length === 0) {
+        simpList.innerHTML = '<div class="empty-state"><div class="icon">&#10003;</div><p style="font-weight:500;">Everyone is settled up!</p></div>';
+    } else {
+        simpList.innerHTML = mathData.simplified_debts.map(d => `
+            <div class="debt-card">
+                <div class="avatar">${d.from[0].toUpperCase()}</div>
+                <div><div class="who">${d.from}</div><div class="arrow">pays ${d.to}</div></div>
+                <div class="amt">${cur} ${d.amount.toFixed(2)}</div>
+            </div>
+        `).join('');
+    }
+}
+
+document.getElementById('math-modal').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeMath();
+});
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeMath();
+});
 </script>
 {% endblock %}

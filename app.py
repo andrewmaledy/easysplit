@@ -111,6 +111,56 @@ def compute_balances(project_id):
     return sorted(balances.values(), key=lambda b: b["name"])
 
 
+def compute_raw_debts(project_id):
+    expenses = db.query("SELECT id, description FROM expenses WHERE project_id = ? ORDER BY date DESC, created_at DESC", (project_id,))
+    aggregated = {}
+    breakdown = []
+
+    for e in expenses:
+        shares = get_shares_for_expense(e["id"])
+        nets = {}
+        for s in shares:
+            mid = s["member_id"]
+            nets[mid] = nets.get(mid, 0.0) + s["paid_share"] - s["owed_share"]
+
+        debtors = {mid: -net for mid, net in nets.items() if net < -0.01}
+        creditors = {mid: net for mid, net in nets.items() if net > 0.01}
+        total_creditor = sum(creditors.values()) or 1
+
+        expense_debts = []
+        for d_id, d_amt in debtors.items():
+            for c_id, c_amt in creditors.items():
+                share = round_cents(d_amt * (c_amt / total_creditor))
+                if share < 0.01:
+                    continue
+                key = tuple(sorted([d_id, c_id]))
+                pair = aggregated.setdefault(key, {})
+                pair.setdefault((d_id, c_id), 0.0)
+                pair[(d_id, c_id)] += share
+                expense_debts.append({
+                    "from": next(s["member_name"] for s in shares if s["member_id"] == d_id),
+                    "to": next(s["member_name"] for s in shares if s["member_id"] == c_id),
+                    "amount": share,
+                })
+
+        if expense_debts:
+            breakdown.append({"description": e["description"], "debts": expense_debts})
+
+    member_names = {m["id"]: m["name"] for m in get_members(project_id)}
+    raw_pairs = []
+    for key, directions in aggregated.items():
+        for (d_id, c_id), amount in directions.items():
+            if amount > 0.01:
+                raw_pairs.append({
+                    "from": member_names.get(d_id, "?"),
+                    "to": member_names.get(c_id, "?"),
+                    "amount": round_cents(amount),
+                })
+
+    raw_pairs.sort(key=lambda x: (x["from"], x["to"]))
+    return raw_pairs, breakdown
+
+
 def simplify_debts(balances):
     debtors = []
     creditors = []
@@ -398,6 +448,23 @@ def balances_json(project_id):
         "balances": balances,
         "simplified_debts": simplified,
         "simplify_by_default": bool(project["simplify_by_default"]),
+    })
+
+
+@app.route("/projects/<int:project_id>/math")
+def math_json(project_id):
+    if not require_project_access(project_id):
+        return redirect(url_for("home"))
+    project = get_project_or_404(project_id)
+    balances = compute_balances(project_id)
+    simplified = simplify_debts(balances)
+    raw_pairs, breakdown = compute_raw_debts(project_id)
+    return jsonify({
+        "raw_debts": raw_pairs,
+        "simplified_debts": simplified,
+        "breakdown": breakdown,
+        "simplify_by_default": bool(project["simplify_by_default"]),
+        "currency": project["currency"],
     })
 
 
