@@ -213,12 +213,26 @@
                         <td style="color:var(--text-dim);">{{ e.created_by_name or '—' }}</td>
                         <td class="right" style="font-weight:600;">{{ project.currency }} {{ e.cost|money }}</td>
                         <td>
-                            <div class="expense-split-tags">
-                            {% for s in e.shares %}
-                                {% if s.owed_share > 0 %}
-                                <span class="tag">{{ s.member_name }} {{ project.currency }}{{ s.owed_share|money }}</span>
-                                {% endif %}
-                            {% endfor %}
+                            <div class="pie-cell">
+                                <div class="pie-icon" style="background: conic-gradient({% for seg in e.pie %}{% if not loop.first %}, {% endif %}#{{ seg.color }} {{ seg.start }}% {{ seg.end }}%{% endfor %});"></div>
+                                <div class="pie-tooltip">
+                                    <div class="pie-tooltip-title">Split breakdown</div>
+                                    {% for seg in e.pie %}
+                                    <div class="pie-tooltip-row">
+                                        <span class="pie-dot" style="background:#{{ seg.color }}"></span>
+                                        <span>{{ seg.name }}</span>
+                                        <span style="margin-left:auto;font-weight:600;">{{ project.currency }} {{ seg.owed|money }}</span>
+                                        <span style="color:var(--text-dim);min-width:42px;text-align:right;">{{ seg.pct }}%</span>
+                                    </div>
+                                    {% endfor %}
+                                    {% for s in e.shares if s.paid_share > 0 and s.owed_share == 0 %}
+                                    <div class="pie-tooltip-row" style="opacity:0.6;">
+                                        <span class="pie-dot" style="background:var(--text-dim);"></span>
+                                        <span>{{ s.member_name }}</span>
+                                        <span style="margin-left:auto;font-weight:600;">paid {{ project.currency }} {{ s.paid_share|money }}</span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
                             </div>
                         </td>
                         <td>

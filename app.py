@@ -275,9 +275,24 @@ def project(project_id):
     members = get_members(project_id)
     expenses = get_expenses(project_id)
 
+    pie_colors = ["6366f1", "22c55e", "f59e0b", "ef4444", "ec4899", "06b6d4", "a855f7", "84cc16"]
     expense_list = []
     for e in expenses:
         shares = get_shares_for_expense(e["id"])
+        pie_data = []
+        cum = 0.0
+        for idx, s in enumerate(shares):
+            if s["owed_share"] > 0:
+                pct = round(s["owed_share"] / e["cost"] * 100, 1) if e["cost"] else 0
+                pie_data.append({
+                    "name": s["member_name"],
+                    "owed": round_cents(s["owed_share"]),
+                    "pct": pct,
+                    "start": round(cum, 1),
+                    "end": round(cum + pct, 1),
+                    "color": pie_colors[idx % len(pie_colors)],
+                })
+                cum += pct
         expense_list.append({
             "id": e["id"],
             "description": e["description"],
@@ -286,6 +301,7 @@ def project(project_id):
             "date": e["date"],
             "created_by_name": e["created_by_name"],
             "shares": shares,
+            "pie": pie_data,
         })
 
     balances = compute_balances(project_id)

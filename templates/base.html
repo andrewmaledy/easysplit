@@ -485,6 +485,27 @@
         }
         .radio-card input[type=radio] { margin-top: 2px; accent-color: var(--accent); width: 16px; height: 16px; }
         .radio-card.selected { border-color: var(--accent); background: var(--accent-soft); }
+
+        .pie-cell { position: relative; display: inline-block; }
+        .pie-icon {
+            width: 22px; height: 22px; border-radius: 50%;
+            cursor: pointer; display: inline-block;
+            border: 1px solid var(--border);
+            transition: transform 0.15s;
+        }
+        .pie-cell:hover .pie-icon { transform: scale(1.15); }
+        .pie-tooltip {
+            display: none; position: absolute;
+            bottom: calc(100% + 10px); left: 50%; transform: translateX(-50%);
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); padding: 14px 16px;
+            box-shadow: var(--shadow-lg); min-width: 240px;
+            z-index: 200;
+        }
+        .pie-cell:hover .pie-tooltip { display: block; }
+        .pie-tooltip-title { font-size: 0.75rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+        .pie-tooltip-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 0.875rem; }
+        .pie-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     </style>
     {% block head %}{% endblock %}
 </head>
