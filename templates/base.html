@@ -494,7 +494,7 @@
         <a href="{{ url_for('home') }}" class="nav-brand"><span class="dot"></span> EasySplit</a>
         {% if session.get('project_id') %}
         <form action="{{ url_for('logout_project', project_id=session['project_id']) }}" method="POST">
-            <button type="submit" class="btn-leave">Leave Trip</button>
+            <button type="submit" class="btn-leave">Log Out</button>
         </form>
         {% endif %}
     </div>
