@@ -128,19 +128,57 @@
             </div>
 
             <div id="custom-split" style="display:none;">
-                <div class="share-grid">
-                    <div class="hdr">Member</div>
-                    <div class="hdr">Paid</div>
-                    <div class="hdr">Owes</div>
+                <!-- Allocation progress -->
+                <div class="custom-progress">
+                    <div class="progress-row">
+                        <span class="progress-label">Owes allocated</span>
+                        <span class="progress-value" id="owed-allocated">$0.00</span>
+                    </div>
+                    <div class="progress-bar-track">
+                        <div class="progress-bar-fill" id="owed-bar" style="width:0%"></div>
+                    </div>
+                    <div class="progress-row">
+                        <span class="progress-remaining" id="owed-remaining">$0.00 left</span>
+                    </div>
+                    <div class="progress-row" style="margin-top:12px;">
+                        <span class="progress-label">Paid allocated</span>
+                        <span class="progress-value" id="paid-allocated">$0.00</span>
+                    </div>
+                    <div class="progress-bar-track">
+                        <div class="progress-bar-fill paid" id="paid-bar" style="width:0%"></div>
+                    </div>
+                    <div class="progress-row">
+                        <span class="progress-remaining" id="paid-remaining">$0.00 left</span>
+                    </div>
                 </div>
-                {% for m in members %}
-                <div class="share-grid">
-                    <div style="font-weight:500;">{{ m.name }}</div>
-                    <input type="number" name="paid_{{ m.id }}" step="0.01" value="0" min="0">
-                    <input type="number" name="owed_{{ m.id }}" step="0.01" value="0" min="0">
+
+                <!-- Member rows -->
+                <div class="custom-members" id="custom-members">
+                    {% for m in members %}
+                    <div class="custom-member" data-member-id="{{ m.id }}" data-name="{{ m.name }}">
+                        <div class="cm-header">
+                            <button type="button" class="cm-toggle" onclick="toggleCustomMember({{ m.id }})" title="Include/exclude">
+                                <span class="cm-avatar">{{ m.name[0]|upper }}</span>
+                                <span class="cm-name">{{ m.name }}</span>
+                            </button>
+                            <span class="cm-pct" id="pct_{{ m.id }}">0%</span>
+                        </div>
+                        <div class="cm-inputs">
+                            <div class="cm-field">
+                                <span class="cm-field-label">Paid</span>
+                                <input type="number" name="paid_{{ m.id }}" step="0.01" value="0" min="0"
+                                       oninput="updateCustomSummary()" data-paid="{{ m.id }}">
+                            </div>
+                            <div class="cm-field">
+                                <span class="cm-field-label">Owes</span>
+                                <input type="number" name="owed_{{ m.id }}" step="0.01" value="0" min="0"
+                                       oninput="updateCustomSummary()" data-owed="{{ m.id }}">
+                            </div>
+                        </div>
+                        <input type="hidden" name="custom_excluded_{{ m.id }}" id="excluded_{{ m.id }}" value="0">
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
-                <p class="hint">Sum of "Paid" and sum of "Owes" must each equal the total cost.</p>
             </div>
 
             <div style="margin-top:20px;">
@@ -257,6 +295,86 @@ function showSplit(type) {
     document.getElementById('custom-split').style.display = type === 'custom' ? '' : 'none';
     document.getElementById('tab-equal').classList.toggle('active', type === 'equal');
     document.getElementById('tab-custom').classList.toggle('active', type === 'custom');
+    if (type === 'custom') updateCustomSummary();
+}
+
+// Also update summary when cost changes
+document.getElementById('cost').addEventListener('input', () => {
+    if (document.getElementById('split_type').value === 'custom') updateCustomSummary();
+});
+
+function toggleCustomMember(memberId) {
+    const row = document.querySelector(`.custom-member[data-member-id="${memberId}"]`);
+    const hidden = document.getElementById(`excluded_${memberId}`);
+    const isExcluded = row.classList.toggle('excluded');
+    hidden.value = isExcluded ? '1' : '0';
+    if (isExcluded) {
+        row.querySelector(`[data-paid="${memberId}"]`).value = '';
+        row.querySelector(`[data-owed="${memberId}"]`).value = '';
+    }
+    updateCustomSummary();
+}
+
+function updateCustomSummary() {
+    const cost = parseFloat(document.getElementById('cost').value) || 0;
+    let totalPaid = 0, totalOwed = 0;
+    const activeMembers = [];
+
+    document.querySelectorAll('.custom-member').forEach(row => {
+        const mid = row.dataset.memberId;
+        const excluded = row.classList.contains('excluded');
+        const paidInput = row.querySelector(`[data-paid="${mid}"]`);
+        const owedInput = row.querySelector(`[data-owed="${mid}"]`);
+
+        if (excluded) {
+            document.getElementById(`pct_${mid}`).textContent = '—';
+            return;
+        }
+
+        const paid = parseFloat(paidInput.value) || 0;
+        const owed = parseFloat(owedInput.value) || 0;
+        totalPaid += paid;
+        totalOwed += owed;
+        activeMembers.push({ mid, owed });
+    });
+
+    // Owes progress
+    const owedRemaining = cost - totalOwed;
+    const owedPct = cost > 0 ? Math.min(100, (totalOwed / cost) * 100) : 0;
+    const owedBar = document.getElementById('owed-bar');
+    const owedRemEl = document.getElementById('owed-remaining');
+    owedBar.style.width = owedPct + '%';
+    owedBar.classList.toggle('complete', Math.abs(owedRemaining) < 0.01);
+    owedBar.classList.toggle('over', owedRemaining < -0.01);
+    owedRemEl.textContent = Math.abs(owedRemaining) < 0.01 ? 'All allocated' :
+        (owedRemaining > 0 ? '$' + owedRemaining.toFixed(2) + ' left' : 'Over by $' + Math.abs(owedRemaining).toFixed(2));
+    owedRemEl.className = 'progress-remaining ' + (Math.abs(owedRemaining) < 0.01 ? 'done' : (owedRemaining < -0.01 ? 'over' : ''));
+    document.getElementById('owed-allocated').textContent = '$' + totalOwed.toFixed(2);
+
+    // Paid progress
+    const paidRemaining = cost - totalPaid;
+    const paidPct = cost > 0 ? Math.min(100, (totalPaid / cost) * 100) : 0;
+    const paidBar = document.getElementById('paid-bar');
+    const paidRemEl = document.getElementById('paid-remaining');
+    paidBar.style.width = paidPct + '%';
+    paidBar.classList.toggle('complete', Math.abs(paidRemaining) < 0.01);
+    paidBar.classList.toggle('over', paidRemaining < -0.01);
+    paidRemEl.textContent = Math.abs(paidRemaining) < 0.01 ? 'All allocated' :
+        (paidRemaining > 0 ? '$' + paidRemaining.toFixed(2) + ' left' : 'Over by $' + Math.abs(paidRemaining).toFixed(2));
+    paidRemEl.className = 'progress-remaining ' + (Math.abs(paidRemaining) < 0.01 ? 'done' : (paidRemaining < -0.01 ? 'over' : ''));
+    document.getElementById('paid-allocated').textContent = '$' + totalPaid.toFixed(2);
+
+    // Per-member percentages (based on owed share of total cost)
+    activeMembers.forEach(m => {
+        const pct = cost > 0 ? ((m.owed / cost) * 100).toFixed(1) : '0';
+        document.getElementById(`pct_${m.mid}`).textContent = pct + '%';
+    });
+
+    // Disable submit if not balanced
+    const balanced = Math.abs(owedRemaining) < 0.02 && Math.abs(paidRemaining) < 0.02;
+    const submitBtn = document.querySelector('#expense-form button[type="submit"]');
+    submitBtn.disabled = !balanced && document.getElementById('split_type').value === 'custom';
+    submitBtn.style.opacity = balanced ? '1' : '0.5';
 }
 
 let mathData = null;

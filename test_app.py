@@ -68,15 +68,32 @@ def run():
     assert b"Gas" in resp.data
     print("PASS: custom-split expense added")
 
+    # 4b. Custom split with an excluded member (Charlie excluded)
+    # $20 expense, Alice pays 20 owes 10, Bob pays 0 owes 10, Charlie excluded
+    resp = client.post("/projects/1/expenses", data={
+        "description": "Coffee",
+        "cost": "20",
+        "date": "2026-01-03",
+        "created_by_member_id": "1",
+        "split_type": "custom",
+        "custom_excluded_1": "0",
+        "paid_1": "20", "owed_1": "10",
+        "paid_2": "0",  "owed_2": "10",
+        "custom_excluded_3": "1",
+        "paid_3": "0",  "owed_3": "0",
+    }, follow_redirects=True)
+    assert b"Coffee" in resp.data
+    print("PASS: custom-split with excluded member")
+
     # 5. Check balances via JSON
     resp = client.get("/projects/1/balances")
     data = resp.get_json()
     bal = {b["name"]: b["net"] for b in data["balances"]}
-    # Alice: paid 90, owed 10 → net +80
-    # Bob:   paid 0,  owed 40 → net -40
-    # Charlie: paid 0, owed 40 → net -40
-    assert abs(bal["Alice"] - 80) < 0.01, f"Alice net should be 80, got {bal['Alice']}"
-    assert abs(bal["Bob"] - (-40)) < 0.01, f"Bob net should be -40, got {bal['Bob']}"
+    # Alice: paid 110, owed 20 -> net +90
+    # Bob:   paid 0,   owed 50 -> net -50
+    # Charlie: paid 0, owed 40 -> net -40 (excluded from Coffee)
+    assert abs(bal["Alice"] - 90) < 0.01, f"Alice net should be 90, got {bal['Alice']}"
+    assert abs(bal["Bob"] - (-50)) < 0.01, f"Bob net should be -50, got {bal['Bob']}"
     assert abs(bal["Charlie"] - (-40)) < 0.01, f"Charlie net should be -40, got {bal['Charlie']}"
     print(f"PASS: balances correct — {bal}")
 
@@ -85,7 +102,7 @@ def run():
     assert len(simplified) == 2, f"expected 2 simplified transactions, got {len(simplified)}"
     # Bob pays Alice 40, Charlie pays Alice 40
     payers = sorted([(t["from"], t["to"], t["amount"]) for t in simplified])
-    assert payers == [("Bob", "Alice", 40.0), ("Charlie", "Alice", 40.0)], f"got {payers}"
+    assert payers == [("Bob", "Alice", 50.0), ("Charlie", "Alice", 40.0)], f"got {payers}"
     print(f"PASS: simplified debts correct — {payers}")
 
     # 7. Test 3-way chain: add expense to create A→B→C chain

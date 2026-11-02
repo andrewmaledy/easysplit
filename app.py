@@ -365,6 +365,9 @@ def add_expense(project_id):
         total_owed = 0.0
         for m in members:
             mid = m["id"]
+            if request.form.get(f"custom_excluded_{mid}") == "1":
+                shares_data.append((mid, 0.0, 0.0))
+                continue
             paid = float(request.form.get(f"paid_{mid}", "0") or "0")
             owed = float(request.form.get(f"owed_{mid}", "0") or "0")
             total_paid += paid
