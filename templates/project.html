@@ -31,12 +31,8 @@
                         <div class="arrow">pays {{ t.to }}</div>
                     </div>
                     <div class="amt">{{ project.currency }} {{ t.amount|money }}</div>
-                    <form method="POST" action="{{ url_for('settle_up', project_id=project.id) }}" style="margin-left:8px;">
-                        <input type="hidden" name="from_name" value="{{ t.from }}">
-                        <input type="hidden" name="to_name" value="{{ t.to }}">
-                        <input type="hidden" name="amount" value="{{ t.amount }}">
-                        <button type="submit" class="btn-sm" style="background:var(--green);">Settle</button>
-                    </form>
+                    <button type="button" class="btn-sm" style="background:var(--green);margin-left:8px;"
+                            onclick="openSettle('{{ t.from }}', '{{ t.to }}', {{ t.amount }})">Settle</button>
                 </div>
                 {% endfor %}
             </div>
@@ -369,6 +365,55 @@
     </div>
 </div>
 
+<!-- Settle Up Modal -->
+<div id="settle-modal" class="modal-overlay" style="display:none;">
+    <div class="modal" style="max-width:420px;">
+        <div class="modal-header">
+            <h2>Settle Up</h2>
+            <button class="modal-close" onclick="closeSettle()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="settle-summary">
+                <div class="settle-who">
+                    <div class="avatar">{{ '<span class="cm-avatar" id="settle-from-avatar"></span>' | safe }}</div>
+                    <div>
+                        <div class="who" id="settle-from-name"></div>
+                        <div class="arrow">pays</div>
+                        <div class="who" id="settle-to-name"></div>
+                    </div>
+                </div>
+                <div class="settle-total">
+                    <div class="settle-label">Total owed</div>
+                    <div class="settle-amount" id="settle-total">{{ project.currency }} 0.00</div>
+                </div>
+            </div>
+            <form method="POST" action="{{ url_for('settle_up', project_id=project.id) }}" id="settle-form">
+                <input type="hidden" name="from_name" id="settle-from">
+                <input type="hidden" name="to_name" id="settle-to">
+                <div class="field">
+                    <label for="settle-amount-input">Amount to pay now</label>
+                    <input type="number" id="settle-amount-input" name="amount" step="0.01" min="0.01" required
+                           oninput="updateSettleRemaining()">
+                </div>
+                <div class="settle-remaining-bar">
+                    <div class="progress-row">
+                        <span class="progress-label">Remaining after this payment</span>
+                        <span class="progress-value" id="settle-remaining">{{ project.currency }} 0.00</span>
+                    </div>
+                    <div class="progress-bar-track">
+                        <div class="progress-bar-fill" id="settle-bar" style="width:0%;background:var(--green);"></div>
+                    </div>
+                </div>
+                <div class="settle-quick">
+                    <button type="button" class="btn-secondary btn-sm" onclick="setSettleHalf()">Half</button>
+                    <button type="button" class="btn-secondary btn-sm" onclick="setSettleFull()">Full amount</button>
+                </div>
+                <button type="submit" style="width:100%;margin-top:16px;">Record Payment</button>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Math Modal -->
 <div id="math-modal" class="modal-overlay" style="display:none;">
     <div class="modal">
@@ -402,6 +447,46 @@
 <script>
 const membersData = {{ members_json | tojson }};
 const projectId = {{ project.id }};
+const currency = '{{ project.currency }}';
+
+// Settle Up modal
+let settleTotal = 0;
+function openSettle(from, to, amount) {
+    settleTotal = amount;
+    document.getElementById('settle-from').value = from;
+    document.getElementById('settle-to').value = to;
+    document.getElementById('settle-from-name').textContent = from;
+    document.getElementById('settle-to-name').textContent = to;
+    document.getElementById('settle-from-avatar').textContent = from[0].toUpperCase();
+    document.getElementById('settle-total').textContent = currency + ' ' + amount.toFixed(2);
+    document.getElementById('settle-amount-input').value = amount.toFixed(2);
+    document.getElementById('settle-modal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    updateSettleRemaining();
+}
+function closeSettle() {
+    document.getElementById('settle-modal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+function updateSettleRemaining() {
+    const paying = parseFloat(document.getElementById('settle-amount-input').value) || 0;
+    const remaining = Math.max(0, settleTotal - paying);
+    const pct = settleTotal > 0 ? Math.min(100, (paying / settleTotal) * 100) : 0;
+    document.getElementById('settle-remaining').textContent = currency + ' ' + remaining.toFixed(2);
+    document.getElementById('settle-bar').style.width = pct + '%';
+    document.getElementById('settle-bar').classList.toggle('complete', remaining < 0.01);
+}
+function setSettleHalf() {
+    document.getElementById('settle-amount-input').value = (settleTotal / 2).toFixed(2);
+    updateSettleRemaining();
+}
+function setSettleFull() {
+    document.getElementById('settle-amount-input').value = settleTotal.toFixed(2);
+    updateSettleRemaining();
+}
+document.getElementById('settle-modal').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeSettle();
+});
 
 // Edit Expense modal
 let editingExpenseId = null;

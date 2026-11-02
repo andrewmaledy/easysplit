@@ -9,22 +9,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0f1115;
-            --surface: #1a1d24;
-            --surface-2: #232730;
-            --border: #2e333d;
-            --text: #e4e6ea;
-            --text-dim: #8b909a;
-            --accent: #6366f1;
-            --accent-hover: #5558e0;
-            --accent-soft: rgba(99, 102, 241, 0.12);
-            --green: #22c55e;
-            --red: #ef4444;
-            --amber: #f59e0b;
+            --bg: #f5f6f8;
+            --surface: #ffffff;
+            --surface-2: #f1f3f6;
+            --border: #e2e6eb;
+            --text: #1a1d23;
+            --text-dim: #6b7280;
+            --accent: #4f46e5;
+            --accent-hover: #4338ca;
+            --accent-soft: rgba(79, 70, 229, 0.08);
+            --green: #16a34a;
+            --red: #dc2626;
+            --amber: #d97706;
             --radius: 14px;
             --radius-sm: 10px;
-            --shadow: 0 1px 3px rgba(0,0,0,0.3);
-            --shadow-lg: 0 8px 30px rgba(0,0,0,0.4);
+            --shadow: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -48,7 +48,7 @@
             position: sticky;
             top: 0;
             z-index: 100;
-            backdrop-filter: blur(12px);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
         }
         .nav-brand {
             color: var(--text);
@@ -123,6 +123,7 @@
             border-radius: var(--radius);
             padding: 24px;
             margin-bottom: 16px;
+            box-shadow: var(--shadow);
         }
 
         label {
@@ -176,7 +177,7 @@
             color: var(--text);
             border: 1px solid var(--border);
         }
-        .btn-secondary:hover { background: var(--border); }
+        .btn-secondary:hover { background: #e8eaee; }
         .btn-danger { background: var(--red); }
         .btn-danger:hover { background: #dc2626; }
         .btn-sm { padding: 5px 12px; font-size: 0.8125rem; }
@@ -186,7 +187,6 @@
         th { font-weight: 600; font-size: 0.8125rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
         td.right, th.right { text-align: right; }
         tbody tr:last-child td { border-bottom: none; }
-        tbody tr { transition: background 0.1s; }
         tbody tr:hover { background: var(--surface-2); }
 
         .pos { color: var(--green); font-weight: 600; }
@@ -200,8 +200,8 @@
             font-size: 0.875rem;
             font-weight: 500;
         }
-        .flash.error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
-        .flash.success { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: #86efac; }
+        .flash.error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+        .flash.success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
 
         .pill {
             display: inline-flex;
@@ -215,8 +215,8 @@
             font-weight: 500;
             color: var(--text-dim);
         }
-        .pill.accent { background: var(--accent-soft); border-color: rgba(99,102,241,0.25); color: #a5a8f0; }
-        .pill.green { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.25); color: var(--green); }
+        .pill.accent { background: var(--accent-soft); border-color: rgba(79,70,229,0.2); color: var(--accent); }
+        .pill.green { background: rgba(22,163,74,0.08); border-color: rgba(22,163,74,0.2); color: var(--green); }
 
         .check-row { display: flex; flex-wrap: wrap; gap: 10px; }
         .check-row label {
@@ -363,7 +363,7 @@
 
         .modal-overlay {
             position: fixed; inset: 0;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0,0,0,0.3);
             backdrop-filter: blur(4px);
             display: flex; align-items: flex-start; justify-content: center;
             z-index: 1000;
@@ -447,7 +447,7 @@
         }
         .cm-exclude-btn:hover { border-color: var(--text-dim); color: var(--text); }
         .custom-member.excluded .cm-exclude-btn {
-            background: var(--accent-soft); color: var(--accent); border-color: rgba(99,102,241,0.3);
+            background: var(--accent-soft); color: var(--accent); border-color: rgba(79,70,229,0.2);
         }
         .cm-avatar {
             width: 28px; height: 28px; border-radius: 50%;
@@ -485,7 +485,6 @@
         }
         .radio-card input[type=radio] { margin-top: 2px; accent-color: var(--accent); width: 16px; height: 16px; }
         .radio-card.selected { border-color: var(--accent); background: var(--accent-soft); }
-
         .pie-cell { position: relative; display: inline-block; }
         .pie-icon {
             width: 22px; height: 22px; border-radius: 50%;
@@ -505,8 +504,17 @@
         .pie-float-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 0.875rem; }
         .pie-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
         .expense-actions { display: flex; gap: 6px; }
-        .payment-row { background: rgba(34,197,94,0.04); }
-        .payment-row:hover { background: rgba(34,197,94,0.08) !important; }
+        .payment-row { background: rgba(22,163,74,0.03); }
+        .payment-row:hover { background: rgba(22,163,74,0.06) !important; }
+        .settle-summary { display: flex; align-items: center; justify-content: space-between; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 20px; }
+        .settle-who { display: flex; align-items: center; gap: 12px; }
+        .settle-who .who { font-weight: 600; }
+        .settle-who .arrow { font-size: 0.875rem; color: var(--text-dim); }
+        .settle-total { text-align: right; }
+        .settle-label { font-size: 0.8125rem; color: var(--text-dim); }
+        .settle-amount { font-size: 1.25rem; font-weight: 700; }
+        .settle-remaining-bar { margin: 16px 0; }
+        .settle-quick { display: flex; gap: 8px; }
     </style>
     {% block head %}{% endblock %}
 </head>
