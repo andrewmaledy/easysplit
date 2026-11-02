@@ -235,6 +235,51 @@ def run():
     assert abs(bal["Eve"]) < 0.01, f"Eve net should be 0, got {bal['Eve']}"
     print("PASS: add member without recalculate")
 
+    # 14. Edit an expense: change Gas from $60 custom to $30 equal split among all
+    with client.session_transaction() as sess:
+        sess["project_id"] = 1
+    # First check expense data endpoint
+    resp = client.get("/projects/1/expenses/2/data")
+    data = resp.get_json()
+    assert data["description"] == "Gas", f"expected Gas, got {data['description']}"
+    assert data["cost"] == 60.0
+    print("PASS: expense data endpoint")
+
+    # Get member IDs from balances
+    resp = client.get("/projects/1/balances")
+    bal_data = resp.get_json()
+    all_member_ids = [b["member_id"] for b in bal_data["balances"]]
+    dave_id = next(b["member_id"] for b in bal_data["balances"] if b["name"] == "Dave")
+
+    # Edit Gas to $30 equal split, Alice paid, all involved
+    resp = client.post("/projects/1/expenses/2/edit", data={
+        "description": "Gas (edited)",
+        "cost": "30",
+        "date": "2026-01-02",
+        "created_by_member_id": str(all_member_ids[0]),
+        "split_type": "equal",
+        "payer_id": str(all_member_ids[0]),
+        "involved_members": [str(mid) for mid in all_member_ids],
+    }, follow_redirects=True)
+    assert b"Gas (edited)" in resp.data, "edited expense should show new name"
+    assert b"Expense updated" in resp.data, "should show success flash"
+    print("PASS: expense edited")
+
+    # Verify balances changed
+    resp = client.get("/projects/1/balances")
+    data = resp.get_json()
+    bal = {b["name"]: b["net"] for b in data["balances"]}
+    # Gas now: $30 equal among all members, Alice paid
+    n_members = len(all_member_ids)
+    per = 30.0 / n_members
+    # Alice: paid 30+20+40=90, owed per+10+10
+    # Others: owed per+their other debts
+    alice_id = all_member_ids[0]
+    alice = next(b for b in data["balances"] if b["member_id"] == alice_id)
+    expected_alice_net = 90 - (per + 10 + 10)
+    assert abs(bal["Alice"] - expected_alice_net) < 0.02, f"Alice net should be {expected_alice_net}, got {bal['Alice']}"
+    print(f"PASS: balances after edit — Alice net={bal['Alice']:.2f}")
+
     print("\n✅ All tests passed!")
 
 run()

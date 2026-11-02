@@ -310,10 +310,13 @@ def project(project_id):
     min_bal = min((b["net"] for b in balances), default=0)
     max_abs = max(abs(max_bal), abs(min_bal), 0.01)
 
+    members_json = [{"id": m["id"], "name": m["name"]} for m in members]
+
     return render_template(
         "project.html",
         project=project,
         members=members,
+        members_json=members_json,
         expenses=expense_list,
         balances=balances,
         simplified=simplified,
@@ -322,94 +325,105 @@ def project(project_id):
     )
 
 
+def process_expense_form(project_id, members):
+    member_ids = [m["id"] for m in members]
+    split_type = request.form.get("split_type", "equal")
+    payer_id = request.form.get("payer_id", type=int)
+    cost_str = request.form.get("cost", "0").strip()
+    cost = float(cost_str) if cost_str else 0.0
+    description = request.form.get("description", "").strip()
+    expense_date = request.form.get("date") or date.today().isoformat()
+    created_by = request.form.get("created_by_member_id", type=int)
+
+    errors = []
+    if not description:
+        errors.append("Description is required.")
+    if cost <= 0:
+        errors.append("Cost must be greater than zero.")
+
+    shares_data = []
+
+    if not errors:
+        if split_type == "equal":
+            involved_ids = [int(mid) for mid in request.form.getlist("involved_members")
+                            if int(mid) in member_ids]
+            if not involved_ids:
+                involved_ids = member_ids
+            if payer_id not in member_ids:
+                payer_id = involved_ids[0]
+
+            per_person = round_cents(cost / len(involved_ids))
+            total_assigned = per_person * len(involved_ids)
+            remainder = round_cents(cost - total_assigned)
+
+            for idx, mid in enumerate(involved_ids):
+                owed = per_person + (remainder if idx == 0 else 0)
+                paid = cost if mid == payer_id else 0.0
+                shares_data.append((mid, round_cents(paid), round_cents(owed)))
+
+        elif split_type == "custom":
+            total_paid = 0.0
+            total_owed = 0.0
+            for m in members:
+                mid = m["id"]
+                if request.form.get(f"custom_excluded_{mid}") == "1":
+                    shares_data.append((mid, 0.0, 0.0))
+                    continue
+                paid = float(request.form.get(f"paid_{mid}", "0") or "0")
+                owed = float(request.form.get(f"owed_{mid}", "0") or "0")
+                total_paid += paid
+                total_owed += owed
+                shares_data.append((mid, round_cents(paid), round_cents(owed)))
+
+            if abs(total_paid - cost) > 0.02:
+                errors.append(f"Paid shares ({total_paid:.2f}) must equal the cost ({cost:.2f}).")
+            if abs(total_owed - cost) > 0.02:
+                errors.append(f"Owed shares ({total_owed:.2f}) must equal the cost ({cost:.2f}).")
+        else:
+            errors.append("Invalid split type.")
+
+    return {
+        "description": description,
+        "cost": cost,
+        "date": expense_date,
+        "split_type": split_type,
+        "created_by": created_by,
+        "shares_data": shares_data,
+        "errors": errors,
+    }
+
+
 @app.route("/projects/<int:project_id>/expenses", methods=["POST"])
 def add_expense(project_id):
     if not require_project_access(project_id):
         return redirect(url_for("home"))
     project = get_project_or_404(project_id)
-
-    description = request.form.get("description", "").strip()
-    cost_str = request.form.get("cost", "0").strip()
-    expense_date = request.form.get("date") or date.today().isoformat()
-    split_type = request.form.get("split_type", "equal")
-    payer_id = request.form.get("payer_id", type=int)
-    created_by = request.form.get("created_by_member_id", type=int)
-
-    if not description:
-        flash("Description is required.", "error")
-        return redirect(url_for("project", project_id=project_id))
-
-    try:
-        cost = float(cost_str)
-    except ValueError:
-        flash("Cost must be a valid number.", "error")
-        return redirect(url_for("project", project_id=project_id))
-
-    if cost <= 0:
-        flash("Cost must be greater than zero.", "error")
-        return redirect(url_for("project", project_id=project_id))
-
     members = get_members(project_id)
     if not members:
         flash("Project has no members.", "error")
         return redirect(url_for("project", project_id=project_id))
 
-    member_ids = [m["id"] for m in members]
-    member_map = {m["id"]: m for m in members}
+    try:
+        data = process_expense_form(project_id, members)
+    except (ValueError, TypeError):
+        flash("Invalid input.", "error")
+        return redirect(url_for("project", project_id=project_id))
 
-    shares_data = []
-
-    if split_type == "equal":
-        involved_ids = [int(mid) for mid in request.form.getlist("involved_members")
-                        if int(mid) in member_ids]
-        if not involved_ids:
-            involved_ids = member_ids
-        if payer_id not in member_ids:
-            payer_id = involved_ids[0]
-
-        per_person = round_cents(cost / len(involved_ids))
-        total_assigned = per_person * len(involved_ids)
-        remainder = round_cents(cost - total_assigned)
-
-        for idx, mid in enumerate(involved_ids):
-            owed = per_person + (remainder if idx == 0 else 0)
-            paid = cost if mid == payer_id else 0.0
-            shares_data.append((mid, round_cents(paid), round_cents(owed)))
-
-    elif split_type == "custom":
-        total_paid = 0.0
-        total_owed = 0.0
-        for m in members:
-            mid = m["id"]
-            if request.form.get(f"custom_excluded_{mid}") == "1":
-                shares_data.append((mid, 0.0, 0.0))
-                continue
-            paid = float(request.form.get(f"paid_{mid}", "0") or "0")
-            owed = float(request.form.get(f"owed_{mid}", "0") or "0")
-            total_paid += paid
-            total_owed += owed
-            shares_data.append((mid, round_cents(paid), round_cents(owed)))
-
-        if abs(total_paid - cost) > 0.02:
-            flash(f"Paid shares ({total_paid:.2f}) must equal the cost ({cost:.2f}).", "error")
-            return redirect(url_for("project", project_id=project_id))
-        if abs(total_owed - cost) > 0.02:
-            flash(f"Owed shares ({total_owed:.2f}) must equal the cost ({cost:.2f}).", "error")
-            return redirect(url_for("project", project_id=project_id))
-
-    else:
-        flash("Invalid split type.", "error")
+    if data["errors"]:
+        for err in data["errors"]:
+            flash(err, "error")
         return redirect(url_for("project", project_id=project_id))
 
     expense_id = db.execute(
         """INSERT INTO expenses
            (project_id, description, cost, currency, date, split_type, created_by_member_id)
            VALUES (?, ?, ?, ?, ?, ?, ?)""",
-        (project_id, description, cost, project["currency"], expense_date, split_type, created_by),
+        (project_id, data["description"], data["cost"], project["currency"],
+         data["date"], data["split_type"], data["created_by"]),
         return_id=True,
     )
 
-    for member_id, paid, owed in shares_data:
+    for member_id, paid, owed in data["shares_data"]:
         if paid > 0 or owed > 0:
             db.execute(
                 "INSERT INTO shares (expense_id, member_id, paid_share, owed_share) VALUES (?, ?, ?, ?)",
@@ -417,6 +431,69 @@ def add_expense(project_id):
             )
 
     flash("Expense added.", "success")
+    return redirect(url_for("project", project_id=project_id))
+
+
+@app.route("/projects/<int:project_id>/expenses/<int:expense_id>/data")
+def expense_data(project_id, expense_id):
+    if not require_project_access(project_id):
+        return jsonify({"error": "access denied"}), 403
+    expense = db.query(
+        "SELECT * FROM expenses WHERE id = ? AND project_id = ?",
+        (expense_id, project_id), one=True,
+    )
+    if not expense:
+        return jsonify({"error": "not found"}), 404
+    shares = get_shares_for_expense(expense_id)
+    return jsonify({
+        "id": expense["id"],
+        "description": expense["description"],
+        "cost": expense["cost"],
+        "date": expense["date"],
+        "split_type": expense["split_type"],
+        "created_by_member_id": expense["created_by_member_id"],
+        "shares": [{"member_id": s["member_id"], "member_name": s["member_name"],
+                     "paid_share": s["paid_share"], "owed_share": s["owed_share"]}
+                    for s in shares],
+    })
+
+
+@app.route("/projects/<int:project_id>/expenses/<int:expense_id>/edit", methods=["POST"])
+def edit_expense(project_id, expense_id):
+    if not require_project_access(project_id):
+        return redirect(url_for("home"))
+    project = get_project_or_404(project_id)
+    members = get_members(project_id)
+    if not members:
+        flash("Project has no members.", "error")
+        return redirect(url_for("project", project_id=project_id))
+
+    try:
+        data = process_expense_form(project_id, members)
+    except (ValueError, TypeError):
+        flash("Invalid input.", "error")
+        return redirect(url_for("project", project_id=project_id))
+
+    if data["errors"]:
+        for err in data["errors"]:
+            flash(err, "error")
+        return redirect(url_for("project", project_id=project_id))
+
+    db.execute(
+        """UPDATE expenses SET description = ?, cost = ?, date = ?, split_type = ?,
+           created_by_member_id = ? WHERE id = ? AND project_id = ?""",
+        (data["description"], data["cost"], data["date"], data["split_type"],
+         data["created_by"], expense_id, project_id),
+    )
+    db.execute("DELETE FROM shares WHERE expense_id = ?", (expense_id,))
+    for member_id, paid, owed in data["shares_data"]:
+        if paid > 0 or owed > 0:
+            db.execute(
+                "INSERT INTO shares (expense_id, member_id, paid_share, owed_share) VALUES (?, ?, ?, ?)",
+                (expense_id, member_id, paid, owed),
+            )
+
+    flash("Expense updated.", "success")
     return redirect(url_for("project", project_id=project_id))
 
 
