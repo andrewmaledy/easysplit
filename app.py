@@ -214,7 +214,7 @@ def home():
 def create_project():
     name = request.form.get("name", "").strip()
     password = request.form.get("password", "")
-    currency = request.form.get("currency", "USD").strip().upper() or "USD"
+    currency = request.form.get("currency", "CAD").strip().upper() or "CAD"
     simplify = 1 if request.form.get("simplify_by_default") else 0
     member_names = [m.strip() for m in request.form.getlist("members") if m.strip()]
 
