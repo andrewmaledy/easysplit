@@ -1,14 +1,26 @@
 {% extends "base.html" %}
-{% block title %}EasySplit — Create or Join{% endblock %}
+{% block title %}EasySplit — Create or Join a Trip{% endblock %}
 
 {% block content %}
 <div class="card">
-    <h2>Create a Project</h2>
-    <p style="color:#666;margin-bottom:14px;">Create a project, add members, and set a password. Share the project ID and password with anyone you want to add expenses.</p>
+    <h2>Enter Trip Password</h2>
+    <p style="color:#666;margin-bottom:14px;">Have a trip password? Enter it to access the trip.</p>
+    <form method="POST" action="{{ url_for('join_project') }}">
+        <div class="field" style="max-width:300px;">
+            <label for="password">Trip Password</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <button type="submit">Enter Trip</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Create a Trip</h2>
+    <p style="color:#666;margin-bottom:14px;">Create a new trip, add members, and set a password. Share the password with anyone you want to add expenses.</p>
     <form method="POST" action="{{ url_for('create_project') }}">
         <div class="row">
             <div class="field">
-                <label for="name">Project Name</label>
+                <label for="name">Trip Name</label>
                 <input type="text" id="name" name="name" required placeholder="e.g. Trip to Lisbon">
             </div>
             <div class="field" style="max-width:120px;">
@@ -17,11 +29,11 @@
             </div>
         </div>
         <div class="field">
-            <label for="password">Project Password</label>
-            <input type="password" id="password" name="password" required placeholder="Anyone with this password can access the project">
+            <label for="password">Trip Password</label>
+            <input type="password" id="create_password" name="password" required placeholder="Anyone with this password can access the trip">
         </div>
         <div class="field">
-            <label>Members (add at least one — the creator should include themselves)</label>
+            <label>Members (add at least one — include yourself)</label>
             <div id="member-fields">
                 <input type="text" name="members" placeholder="Member 1" style="margin-bottom:6px;">
             </div>
@@ -33,24 +45,7 @@
                 Simplify debts (minimize number of payments needed to settle up)
             </label>
         </div>
-        <button type="submit">Create Project</button>
-    </form>
-</div>
-
-<div class="card">
-    <h2>Join a Project</h2>
-    <form method="POST" action="" id="join-form">
-        <div class="row">
-            <div class="field" style="max-width:120px;">
-                <label for="join_id">Project ID</label>
-                <input type="number" id="join_id" name="project_id" required>
-            </div>
-            <div class="field" style="max-width:250px;">
-                <label for="join_password">Password</label>
-                <input type="password" id="join_password" name="password" required>
-            </div>
-        </div>
-        <button type="submit" id="join-btn">Join</button>
+        <button type="submit">Create Trip</button>
     </form>
 </div>
 {% endblock %}
@@ -68,22 +63,5 @@ function addMemberField() {
     container.appendChild(input);
     input.focus();
 }
-
-document.getElementById('join-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const pid = document.getElementById('join_id').value;
-    const formData = new FormData();
-    formData.append('password', document.getElementById('join_password').value);
-    fetch('{{ url_for("join_project", project_id=0) }}'.replace('/0', '/' + pid), {
-        method: 'POST',
-        body: formData
-    }).then(r => {
-        if (r.redirected) {
-            window.location.href = r.url;
-        } else {
-            window.location.href = '{{ url_for("home") }}';
-        }
-    });
-});
 </script>
 {% endblock %}

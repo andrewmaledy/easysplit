@@ -185,15 +185,24 @@ def create_project():
     return redirect(url_for("project", project_id=pid))
 
 
-@app.route("/projects/<int:project_id>/join", methods=["POST"])
-def join_project(project_id):
-    project = get_project_or_404(project_id)
+@app.route("/projects/join", methods=["POST"])
+def join_project():
     password = request.form.get("password", "")
-    if check_password_hash(project["password_hash"], password):
-        session["project_id"] = project_id
-        return redirect(url_for("project", project_id=project_id))
-    flash("Incorrect password.", "error")
-    return redirect(url_for("home"))
+    projects = db.query("SELECT id, password_hash, name FROM projects ORDER BY id")
+    matches = [p for p in projects if check_password_hash(p["password_hash"], password)]
+    if not matches:
+        flash("No trip found with that password.", "error")
+        return redirect(url_for("home"))
+    if len(matches) == 1:
+        session["project_id"] = matches[0]["id"]
+        return redirect(url_for("project", project_id=matches[0]["id"]))
+    return render_template("pick_project.html", projects=matches)
+
+
+@app.route("/projects/<int:project_id>/select", methods=["POST"])
+def select_project(project_id):
+    session["project_id"] = project_id
+    return redirect(url_for("project", project_id=project_id))
 
 
 @app.route("/projects/<int:project_id>/logout", methods=["POST"])

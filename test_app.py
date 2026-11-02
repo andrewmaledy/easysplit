@@ -145,6 +145,20 @@ def run():
     assert b"Dinner" not in resp.data, "deleted expense should be gone"
     print("PASS: expense deleted")
 
+    # 9. Test join-by-password: clear session, rejoin with password
+    with client.session_transaction() as sess:
+        sess.pop("project_id", None)
+    resp = client.post("/projects/join", data={"password": "secret123"}, follow_redirects=True)
+    assert b"Test Trip" in resp.data, "should rejoin project 1 by password"
+    print("PASS: join by password")
+
+    # 10. Wrong password
+    with client.session_transaction() as sess:
+        sess.pop("project_id", None)
+    resp = client.post("/projects/join", data={"password": "wrong"}, follow_redirects=True)
+    assert b"No trip found" in resp.data, "should show error for wrong password"
+    print("PASS: wrong password rejected")
+
     print("\n✅ All tests passed!")
 
 run()

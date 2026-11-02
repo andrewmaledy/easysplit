@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Select a Trip — EasySplit{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Multiple Trips Found</h2>
+    <p style="color:#666;margin-bottom:14px;">Several trips share that password. Pick the one you want to open.</p>
+    {% for p in projects %}
+    <form method="POST" action="{{ url_for('select_project', project_id=p.id) }}" style="margin-bottom:10px;">
+        <button type="submit" class="btn" style="width:100%;text-align:left;">{{ p.name }} (ID: {{ p.id }})</button>
+    </form>
+    {% endfor %}
+    <p style="margin-top:16px;"><a href="{{ url_for('home') }}" class="btn" style="background:var(--gray);color:var(--text);">Back</a></p>
+</div>
+{% endblock %}
